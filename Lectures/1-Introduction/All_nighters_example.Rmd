@@ -69,3 +69,7 @@ ggplot(allnighterposterior_all, aes(x = p, y = value, colour = variable)) +
  theme_bw(base_size = 12, base_family = "")
 
 ```
+
+#### \textcolor{cyan}{Remarks}
+
+Note that for values that the prior values do not take on, the prior probability for those values will be zero, and so is the posterior probability.
