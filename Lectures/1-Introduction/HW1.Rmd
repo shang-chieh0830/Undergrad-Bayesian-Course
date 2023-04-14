@@ -1,0 +1,386 @@
+---
+title: "Bayesian Statistics- HW1"
+author: "魏上傑"
+date: "2023-04-14"
+output:
+  pdf_document:
+    latex_engine: xelatex
+  html_document:
+    df_print: paged
+mainfont: Times New Roman
+fontsize: 12pt
+papersize: a4
+geometry: margin=1.5cm
+lang: "zh-tw"
+documentclass: ctexart
+---
+
+
+1. 
+
+It is estimated that roughly 8% of incoming email is spam. A spam filter has an accuracy rate of 92% for spam emails, and it incorrectly categorizes 3% as non-spam emails as spam.
+
+(a) What percent of all email is marked as spam?
+
+  I will use S as spam, NS as non-spam, and MS as marked-spam for short.
+
+\begin{equation}
+\begin{split}
+P(MS)=P(S, MS)+P(NS, MS)\\
+=P(MS|S)*P(S)+P(MS|NS)*P(NS)\\
+=0.92*0.08+0.03*0.92\\
+=0.102
+\end{split}
+\notag
+\end{equation}
+
+```{r}
+0.93*0.08+0.03*0.92
+```
+
+
+(b) If an email is marked as spam, what is the probability that it is indeed a spam email?
+
+$$P(S|MS)=\frac{P(S,MS)}{P(MS)}=\frac{0.92*0.08}{0.102}=0.72$$
+
+```{r}
+0.92*0.08/0.102
+```
+
+2. 
+
+Marginal and conditional probability: The social mobility data from Section 2.5 gives a joint probability distribution on $(Y_1,Y_2)$= (father’s occupation, son’s occupation). Using this joint distribution, calculate the following distributions:
+
+(a) the marginal probability distribution of a father’s occupation;
+
+\begin{equation}
+\begin{split}
+P(farm)=0.018+0.035+0.031+0.008+0.018=0.11\\
+P(operatives)=0.002+0.112+0.064+0.032+0.069=0.279\\
+P(craftsmen)=0.001+0.066+0.094+0.032+0.084=0.277\\
+P(sales)=0.001+0.018+0.019+0.010+0.051=0.099\\
+P(professional)=0.001+0.029+0.032+0.043+0.130=0.235
+\end{split}
+\notag
+\end{equation}
+
+
+```{r}
+0.018+0.035+0.031+0.008+0.018
+0.002+0.112+0.064+0.032+0.069
+0.001+0.066+0.094+0.032+0.084
+0.001+0.018+0.019+0.010+0.051
+0.001+0.029+0.032+0.043+0.130
+```
+
+
+(b) the marginal probability distribution of a son’s occupation;
+
+\begin{equation}
+\begin{split}
+P(farm)=0.018+0.002+0.001+0.001+0.001=0.023\\
+P(operatives)=0.035+0.112+0.066+0.018+0.029=0.26\\
+P(craftsmen)=0.031+0.064+0.094+0.019+0.032= 0.24\\
+P(sales)=0.008+0.032+0.032+0.010+0.043=0.125\\
+P(professional)=0.018+0.069+0.084+0.051+0.130= 0.352
+\end{split}
+\notag
+\end{equation}
+
+```{r}
+0.018+0.002+0.001+0.001+0.001
+0.035+0.112+0.066+0.018+0.029
+0.031+0.064+0.094+0.019+0.032
+0.008+0.032+0.032+0.010+0.043
+0.018+0.069+0.084+0.051+0.130
+```
+
+(c) the conditional distribution of a son’s occupation, given that the father is a farmer;
+
+\begin{equation}
+\begin{split}
+P(sfarm|ffarm)=0.018/0.11=0.164\\
+P(sOper|ffarm)=0.035/0.11=0.318\\
+P(sCraft|ffarm)=0.031/0.11=0.282\\
+P(sSales|ffarm)=0.008/0.11=0.073\\
+P(sPro|ffarm)=0.018/0.11=0.164\\
+\end{split}
+\notag
+\end{equation}
+
+```{r}
+0.018/0.11
+0.035/0.11
+0.031/0.11
+0.008/0.11
+0.018/0.11
+```
+
+
+(d) the conditional distribution of a father’s occupation, given that the son is a farmer.
+
+
+
+\begin{equation}
+\begin{split}
+P(ffarm|sfarm)=0.018/0.023=0.783\\
+P(fOper|sfarm)=0.002/0.023=0.087\\
+P(fCraft|sfarm)=0.001/0.023=0.043\\
+P(fSales|sfarm)=0.001/0.023=0.043\\
+P(fPro|sfarm)=0.001/0.023=0.043\\
+\end{split}
+\notag
+\end{equation}
+
+```{r}
+0.018/0.023
+0.002/0.023
+0.001/0.023
+0.001/0.023
+0.001/0.023
+```
+
+
+
+
+3. 
+
+Let $X \sim N(μ, σ^2)$, what distribution does $Y = (X −μ)/σ$ have? (Hint: review the change of variable material.)
+
+\begin{equation}
+\begin{split}
+Y=g(X)=X-\mu/\sigma \implies X=g^{-1}(Y)=\sigma Y+\mu\\
+f_Y(y)=f_X(g^{-1}(y))|\frac{dg^{-1}(y)}{dy}|\\
+=\frac{1}{\sqrt{2\pi}\sigma}exp(-\frac{(x-\mu)^2}{2\sigma^2})\times \sigma\\
+=\frac{1}{\sqrt{2\pi}}exp(-\frac{(\sigma y)^2}{2\sigma^2})\\
+=\frac{1}{\sqrt{2\pi}}exp(-\frac{y^2}{2})
+\implies Y\sim N(0,1)
+\end{split}
+\notag
+\end{equation}
+
+4. 
+
+Let $X_1,··· ,X_n ∼ Normal(μ_X,σ_X)$, and $Y_1,··· ,Y_m ∼ Normal(μ_Y ,σ_Y )$, and assume all X’s and Y ’s are independent. Write out the joint density:
+
+$f(X_1 = x_1,··· ,X_n = x_n,Y_1 = y_1,··· ,Y_m = y_m | μ_X,μ_Y ,σ_X,σ_Y ).$
+
+\begin{equation}
+\begin{split}
+=\prod_{i=1}^{n}\frac{1}{\sqrt{2\pi}\sigma_x}exp(-\frac{(x_i-\mu_x)^2}{2\sigma_x^2})\prod_{j=1}^{m}\frac{1}{\sqrt{2\pi}\sigma_y}exp(-\frac{(y_j-\mu_y)^2}{2\sigma_y^2})\\
+=(2\pi\sigma_x^2)^{n/2}(2\pi\sigma_y^2)^{n/2}exp(-\frac{\sum_i(x_i-\mu_x)^2}{2\sigma_x^2})exp(-\frac{\sum_j(y_j-\mu_y)^2}{2\sigma_y^2})
+\end{split}
+\notag
+\end{equation}
+
+5. 
+
+We say a random variable X has a logistic distribution, if its cdf is $F(x)= 1+\frac{e^x}{1+e^x}, −∞<x<∞.$
+
+To compare this distribution with the standard normal distribution, use R to plot their pdf’s (in the same graph). Suppose you draw 1000 random samples from each distribution, then which distribution will you expect to see more samples with extreme values (Heavy tail, i.e., very large in absolute value, either positive or negative)? 
+
+(Hint: in R, `dnorm()` is the function to evaluate the pdf of a normal distribution, and `dlogis()` is the function to evaluate the pdf of a logistic distribution.)
+
+```{r}
+# Generate x-values
+x <- seq(-5, 5, length.out = 100)
+
+# Compute PDF values
+pdf_logis <- dlogis(x)
+pdf_norm <- dnorm(x)
+
+# Plot PDFs
+plot(x, pdf_logis, type = "l", col = "blue", ylim = c(0, 0.4), 
+     ylab = "PDF", xlab = "x")
+lines(x, pdf_norm, col = "red")
+legend("topright", legend = c("Logistic", "Normal"), lty = 1, 
+       col = c("blue", "red"))
+grid()
+```
+
+```{r}
+# Generate random samples
+n <- 1000
+samples_logis <- rlogis(n)
+samples_norm <- rnorm(n)
+
+# Count extreme values
+num_extreme_logis <- sum(abs(samples_logis) > 3)
+num_extreme_norm <- sum(abs(samples_norm) > 3)
+
+# Print results
+cat("Number of extreme values in logistic distribution:", num_extreme_logis, "\n")
+cat("Number of extreme values in normal distribution:", num_extreme_norm, "\n")
+
+```
+
+6. 
+
+In the all-nighters example in class, we took a sample of n = 10 Vassar students and obtained y = 3 out of 10 who had pulled an all-nighter in last academic year. Recall that we came up with a prior distribution for the percentage p of all Vassar students who had pulled an all-nighter in last academic year as (in R):
+
+`priorvalues <- c(0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1)`
+
+`priorprob <- c(1/23, 1/23, 7/23, 7/23, 3/23, 3/23, 1/23, 0/23, 0/23, 0/23, 0/23)`
+
+
+We used the pre-written RMarkdown file to calculate the posterior probabilities of 11 values of p and plot the prior and posterior on the same graph.
+
+Now consider another sample of $n_2 = 10$ with $y_2 = 5$ (use new notation for the previous sample $n_1 = 10, y_1 = 3$). Use the R script and make changes to perform the following:
+
+(a) Treat two samples as one sample, that is, $n=n_1+n_2 =10+10=20$ and $y= y_1+y_2 =3+5=8$. Calculate the posterior probabilities of p given this new combined sample (n, y).
+
+```{r}
+priorvalues <- c(0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1)
+priorprob <- c(1/23, 1/23, 7/23, 7/23, 3/23, 3/23, 1/23, 0/23, 0/23, 0/23, 0/23)
+
+n <- 20
+y <- 8
+
+```
+
+```{r}
+set.seed(1111)
+#vector for storing results
+jointprob <- numeric(length = length(priorvalues))
+
+for(i in 1:length(priorvalues))
+{
+  
+  #compute Binomial probability given value of p - likelihood
+  binomprob <- dbinom(y, n, p = priorvalues[i])
+  
+  #compute joint probability - posterior
+  jointprob[i] <- binomprob * priorprob[i]
+  
+}
+
+#compute marginal probability of y 
+pofy <- sum(jointprob)
+
+#compute posterior probabilities
+posteriorprob <- jointprob/pofy
+```
+
+```{r}
+#put posterior probabilities in one matrix object for easy viewing 
+allnighterposterior <- as.data.frame(cbind(priorvalues, priorprob, posteriorprob))
+names(allnighterposterior) <- c("p", "prior", "posterior")
+
+#list the final posterior distribution, based on our prior derived in class
+allnighterposterior
+
+#plot the prior and posterior probabilities
+require(ggplot2)
+require(reshape2)
+
+allnighterposterior_all <- melt(allnighterposterior, id = "p")
+
+ggplot(allnighterposterior_all, aes(x = p, y = value, colour = variable)) +
+  geom_point(size = 3) + 
+  xlab("p") + ylab("probability") +
+ theme_bw(base_size = 12, base_family = "")
+
+```
+
+
+(b) Recall that a sequential update is to use the previous posterior from the first sample $(n_1,y_1)$ as the prior for the second sample $(n_2,y_2)$. Do a sequential update and check whether the posterior probabilities match with what you calculated in (a).
+
+We need to run sample 1 first.
+
+```{r}
+set.seed(1111)
+priorvalues <- c(0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1)
+priorprob <- c(1/23, 1/23, 7/23, 7/23, 3/23, 3/23, 1/23, 0/23, 0/23, 0/23, 0/23)
+
+n <- 10
+y <- 3
+
+
+#vector for storing results
+jointprob <- numeric(length = length(priorvalues))
+
+for(i in 1:length(priorvalues))
+{
+  
+  #compute Binomial probability given value of p - likelihood
+  binomprob <- dbinom(y, n, p = priorvalues[i])
+  
+  #compute joint probability - posterior
+  jointprob[i] <- binomprob * priorprob[i]
+  
+}
+
+#compute marginal probability of y 
+pofy <- sum(jointprob)
+
+#compute posterior probabilities
+posteriorprob <- jointprob/pofy
+
+
+#put posterior probabilities in one matrix object for easy viewing 
+allnighterposterior <- as.data.frame(cbind(priorvalues, priorprob, posteriorprob))
+names(allnighterposterior) <- c("p", "prior", "posterior")
+
+allnighterposterior_sample1 <- allnighterposterior$posterior
+
+```
+
+Now, we use the posteriors obtained from sample 1 as our new prior for sample 2.
+
+```{r}
+set.seed(1111)
+priorvalues <- c(0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1)
+priorprob <- allnighterposterior_sample1
+
+
+n <- 10
+y <- 5
+
+
+#vector for storing results
+jointprob <- numeric(length = length(priorvalues))
+
+for(i in 1:length(priorvalues))
+{
+  
+  #compute Binomial probability given value of p - likelihood
+  binomprob <- dbinom(y, n, p = priorvalues[i])
+  
+  #compute joint probability - posterior
+  jointprob[i] <- binomprob * priorprob[i]
+  
+}
+
+#compute marginal probability of y 
+pofy <- sum(jointprob)
+
+#compute posterior probabilities
+posteriorprob <- jointprob/pofy
+
+
+#put posterior probabilities in one matrix object for easy viewing 
+allnighterposterior <- as.data.frame(cbind(priorvalues, priorprob, posteriorprob))
+names(allnighterposterior) <- c("p", "prior", "posterior")
+
+#list the final posterior distribution, based on our prior derived in class
+allnighterposterior
+
+#plot the prior and posterior probabilities
+require(ggplot2)
+require(reshape2)
+
+allnighterposterior_all <- melt(allnighterposterior, id = "p")
+
+ggplot(allnighterposterior_all, aes(x = p, y = value, colour = variable)) +
+  geom_point(size = 3) + 
+  xlab("p") + ylab("probability") +
+ theme_bw(base_size = 12, base_family = "")
+
+```
+
+The posterior probabilities match with what I calculated in (a).
+
+(c) Would sequential update make sense in this case? Why or why not?
+
+Yes, this is because these two samples share the same prior belief, which in Bayesian viewpoint means that these two samples are similar. It wouldn't make sense if these two samples are not alike.
+
