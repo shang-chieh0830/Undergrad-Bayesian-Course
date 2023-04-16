@@ -66,9 +66,18 @@ bayesian_crank(bayes_table) -> bayes_table
 bayes_table
 ```
 
+```{r}
+# check the above result
+
+bayes_table$Product[1]/sum(bayes_table$Product)
+```
+
+
+
 ```{r,}
 bayesian_crank(bayes_table) -> bayes_table
 sum(bayes_table$Posterior[bayes_table$p > 0.5])
+sum(bayes_table$Posterior[bayes_table$p < 0.4])
 ```
 
 
@@ -128,9 +137,43 @@ beta.select(list(x = 0.55, p = 0.5),
 ```
 
 
+```{r}
+# we can verify that Beta(3.06, 2.56) hat p_50= 0.55
+# and p_90 = 0.8
+
+beta_quantile(0.5, c(3.06, 2.56), Color = crcblue) +
+  theme(text=element_text(size=10))
+
+beta_quantile(0.9, c(3.06, 2.56), Color = crcblue) +
+  theme(text=element_text(size=10))
+
+```
+
+
+
 # Updating the Beta prior
 
 ## Use R/RStudio to compute and plot the posterior
+
+Some derivations:
+
+$p\sim Beta(a,b) \implies \pi(p)=\frac{1}{B(a,b)}p^{a-1}(1-p)^{b-1}$
+
+$y|p\sim Bin(n,p)\implies L(p)=\binom ny p^y(1-p)^{n-y}$
+
+Want to show: $p|y\sim Beta(a+y, b+n-y)$
+
+\begin{equation}
+\begin{split}
+\pi(p,y)=\frac{\pi(p)L(p)}{\int \pi(\tilde p)L(\tilde p)d \tilde p}\\=\frac{\frac{1}{B(a,b)}p^{a-1}(1-p)^{b-1}\binom ny p^y(1-p)^{n-y}}{\int \frac{1}{B(a,b)}\tilde p^{a-1} (1-\tilde p)^{b-1}\binom ny \tilde p^y(1-\tilde p)^{n-y}d\tilde p}\\=\frac{p^{a+y-1}(1-p)^{b+n-y-1}}{\int \tilde p^{a+y-1}(1-\tilde p)^{b+n-y-1}d\tilde p}\\=\frac{p^{a+y-1}(1-p)^{b+n-y-1}}{B(a+y, b+n-y)}
+\end{split}
+\notag
+\end{equation}
+
+The last equation comes about by the fact that:
+
+$\int \pi(p)dp=1\implies \int\frac{1}{B(a+y,b+n-y)}\tilde p^{a+y-1}(1-\tilde p^{b+n+y-1})d\tilde p=1$
+
 
 ```{r,}
 ab <- c(3.06, 2.56)
@@ -160,16 +203,61 @@ ggplot(data.frame(x=c(0, 1)), aes(x)) +
   increasefont()
 ```
 
+Exercise 1:
+
+Compare prior mean 0.544 and posterior mean 0.588. (Recall that sample mean is $\hat p=\frac yn=12/20=0.6$)
+
+Note that the posterior is a combination of the prior and the data.
+In fact the posterior is the weighted average of the prior and the data. 
+
+This is shown by the fact that the posterior mean (=0.588) is in the middle of the prior mean (=0.544) and the sample mean (=0.6)
+
+If you have strong prior, the posterior will be more heavily influenced by it, o.w., it will be driven more by data.
+
+Please check page 59/90 ( or 32/50) of the slides, let's consider two cases of the prior: 
+
+1. a:b=1:4
+
+2. a:b=10:40
+
+Even though the ratio is the same, but they carry different amount of information. The larger the prior, the more information you have in the prior, and thus the posterior will be more heavily influenced by the prior in the second case.
+
+
+Exercise 2:
+
+Compare the spreads/volatility of the two curves. How can we think about the "sharpened belief" once we did the updating?
+
+Clearly, the spread on the x-axis of the posterior becomes much smaller, which means that we have less uncertainty about the parameter
+
+Note that both prior and posterior are still densities, so the area under these two curves equals one respectively.
+
+
+
 # Bayesian inference with continuous priors
 
 ## Bayesian hypothesis testing
 
 ```{r}
+# lo = low, hi = high
 beta_area(lo = 0.75, hi = 1.0, shape_par = c(15.06, 10.56), 
           Color = crcblue) +
   theme(text=element_text(size=18))
 ```
 
+Posterior probability is only 4%, reject the claim.
+
+```{r}
+# Exercise: what about a claim "at most 30% of the customers 
+# prefer Friday" ?
+
+beta_area(lo = 0, hi = 0.3, shape_par = c(15.06, 10.56), 
+          Color = crcblue) +
+  theme(text=element_text(size=18))
+```
+
+When the posterior distribution is known...
+
+- Exact solution: use the `beta_area()` in the `ProbBayes` package and/or the `pbeta()` R function
 
 ```{r, eval = FALSE}
 beta_area(lo = 0.75, hi = 1.0, shape_par = c(15.06, 10.56))
@@ -179,10 +267,15 @@ beta_area(lo = 0.75, hi = 1.0, shape_par = c(15.06, 10.56))
 pbeta(1, 15.06, 10.56) - pbeta(0.75, 15.06, 10.56)
 ```
 
+- Approximation through Monte Carlo simulation using the `rbeta()` R function
+
 ```{r}
-S <- 1000
+S <- 1000 # number of simulation draws
 BetaSamples <- rbeta(S, 15.06, 10.56)
 sum(BetaSamples >= 0.75)/S
+
+# sum(BetaSamples >= 0.75) tells us how many random draws are
+# larger than 0.75
 ```
 
 ## Bayesian credible intervals
@@ -194,24 +287,53 @@ beta_interval(0.9, c(15.06, 10.56), Color = crcblue) +
 ```
 
 ```{r}
+# Exercise: construct a middle 98% credible interval for p
+
+beta_interval(0.98, c(15.06, 10.56), Color = crcblue) +
+  theme(text=element_text(size=18))
+```
+
+When the posterior distribution is known....
+
+- Exact solution: use the `beta_interval()` function in the `ProbBayes` package (only the middle 90%) and or the `qbeta()` R function
+(not necessarily the middle 90%)
+
+```{r}
+# middle 90% indeed
 c(qbeta(0.05, 15.06, 10.56), qbeta(0.95, 15.06, 10.56))
 ```
 
 ```{r}
+# 90%, but not in the middle
+c(qbeta(0, 15.06, 10.56), qbeta(0.9, 15.06, 10.56))
+```
+
+- Approximation through Monte Carlo simulation using the `rbeta()` R function (not necessarily the middle 90%)
+
+```{r}
+# 90% in the middle indeed
 S <- 1000; BetaSamples <- rbeta(S, 15.06, 10.56)
 quantile(BetaSamples, c(0.05, 0.95))
 ```
     
-    
+```{r}
+# 90%, but not in the middle
+S <- 1000; BetaSamples <- rbeta(S, 15.06, 10.56)
+quantile(BetaSamples, c(0., 0.9))
+```
+
 
 ## Use R/RStudio to make Bayesian predictions
+
+Bayesian prediction is posterior predictive.
+
 ```{r}
 S <- 1000
 a <- 3.06; b <- 2.56
 n <- 20; y <- 12
 m <- 20
-pred_p_sim <- rbeta(S, a + y, b + n - y)
-pred_y_sim <- rbinom(S, m, pred_p_sim)
+pred_p_sim <- rbeta(S, a + y, b + n - y) # sample p from posterior
+pred_y_sim <- rbinom(S, m, pred_p_sim) # sample new y from p
 sum(pred_y_sim >=5 & pred_y_sim <= 15)/S
 ```
 
@@ -272,6 +394,9 @@ ggplot(data=newy, aes(newy$y)) +
   geom_histogram(breaks=seq(0, 20, by=0.5), fill = crcblue) +
   annotate("point", x = 12, y = 0, colour = "red", size = 5) +
   xlab("y") + theme(text=element_text(size=10))
+
+# If the red dot is in the extreme of the histogram
+# then your prediction may not perform well
 ```
 
 ```{r}

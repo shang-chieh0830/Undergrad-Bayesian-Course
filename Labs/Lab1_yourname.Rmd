@@ -1,10 +1,11 @@
 ---
 output:
   pdf_document: default
+classoption: dvipsnames
 header-includes:
   - \usepackage{color}
-  - \usepackage[dvipsnames]{xcolor}
 ---
+
 ----
  Fall 2019: MATH 347 Bayesian Statistics
 ---

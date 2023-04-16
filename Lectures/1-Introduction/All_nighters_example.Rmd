@@ -1,21 +1,21 @@
 ---
 output:
   pdf_document: default
+classoption: dvipsnames
 header-includes:
   - \usepackage{color}
-  - \usepackage{xcolor}
 ---
 ----
  Fall 2019: MATH 347 Bayesian Statistics
 ---
 
-## \textcolor{cyan}{R Script for the All-nighters Problem}
+## \textcolor{RoyalBlue}{R Script for the All-nighters Problem}
 
 Here we use R for the Bayesian posterior distribution with Binomial data and a discrete prior. A script to estimate the posterior distribution has been created and provided here. 
 You can copy this directly into R and it will run all the commands. 
 
 
-#### \textcolor{cyan}{Step 1: Load the prior and data.}
+#### \textcolor{RoyalBlue}{Step 1: Load the prior and data.}
 
 ```{r}
 priorvalues <- c(0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1)
@@ -25,7 +25,7 @@ n <- 10
 y <- 3
 ```
 
-#### \textcolor{cyan}{Step 2: Calculating the likelihood probabilities and posterior probabilities.}
+#### \textcolor{RoyalBlue}{Step 2: Calculating the likelihood probabilities and posterior probabilities.}
 ```{r}
 #vector for storing results
 jointprob <- numeric(length = length(priorvalues))
@@ -48,7 +48,7 @@ pofy <- sum(jointprob)
 posteriorprob <- jointprob/pofy
 ```
 
-#### \textcolor{cyan}{Step 3: Present and visualize results.}
+#### \textcolor{RoyalBlue}{Step 3: Present and visualize results.}
 ```{r}
 #put posterior probabilities in one matrix object for easy viewing 
 allnighterposterior <- as.data.frame(cbind(priorvalues, priorprob, posteriorprob))
@@ -70,6 +70,6 @@ ggplot(allnighterposterior_all, aes(x = p, y = value, colour = variable)) +
 
 ```
 
-#### \textcolor{cyan}{Remarks}
+#### \textcolor{RoyalBlue}{Remarks}
 
 Note that for values that the prior values do not take on, the prior probability for those values will be zero, and so is the posterior probability.
