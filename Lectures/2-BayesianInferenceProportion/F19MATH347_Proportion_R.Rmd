@@ -165,7 +165,7 @@ Want to show: $p|y\sim Beta(a+y, b+n-y)$
 
 \begin{equation}
 \begin{split}
-\pi(p,y)=\frac{\pi(p)L(p)}{\int \pi(\tilde p)L(\tilde p)d \tilde p}\\=\frac{\frac{1}{B(a,b)}p^{a-1}(1-p)^{b-1}\binom ny p^y(1-p)^{n-y}}{\int \frac{1}{B(a,b)}\tilde p^{a-1} (1-\tilde p)^{b-1}\binom ny \tilde p^y(1-\tilde p)^{n-y}d\tilde p}\\=\frac{p^{a+y-1}(1-p)^{b+n-y-1}}{\int \tilde p^{a+y-1}(1-\tilde p)^{b+n-y-1}d\tilde p}\\=\frac{p^{a+y-1}(1-p)^{b+n-y-1}}{B(a+y, b+n-y)}
+\pi(p|y)=\frac{\pi(p)L(p)}{\int \pi(\tilde p)L(\tilde p)d \tilde p}\\=\frac{\frac{1}{B(a,b)}p^{a-1}(1-p)^{b-1}\binom ny p^y(1-p)^{n-y}}{\int \frac{1}{B(a,b)}\tilde p^{a-1} (1-\tilde p)^{b-1}\binom ny \tilde p^y(1-\tilde p)^{n-y}d\tilde p}\\=\frac{p^{a+y-1}(1-p)^{b+n-y-1}}{\int \tilde p^{a+y-1}(1-\tilde p)^{b+n-y-1}d\tilde p}\\=\frac{p^{a+y-1}(1-p)^{b+n-y-1}}{B(a+y, b+n-y)}
 \end{split}
 \notag
 \end{equation}
