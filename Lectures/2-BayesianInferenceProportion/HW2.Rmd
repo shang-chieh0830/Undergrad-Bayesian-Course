@@ -123,7 +123,7 @@ ggplot(BETA, aes(p, Density))+
 
 ```
 
-(b) The probability P (0.2 ≤ p ≤ 0.6) if p ∼ Beta(6, 3).
+(b) The probability P (0.2 ≤ p ≤ 0.6) if $p \sim  Beta(6, 3)$.
 
 ```{r}
 pbeta(0.6, 6, 3, lower.tail = TRUE) - pbeta(0.2, 6, 3, lower.tail = TRUE)
