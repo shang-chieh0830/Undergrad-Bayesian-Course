@@ -211,6 +211,6 @@ Want to show: $p|y\sim Beta(a+y, b+n-y)$
 
 The last equation comes about by the fact that:
 
-$\int \pi(p)dp=1\implies \int\frac{1}{B(a+y,b+n-y)}\tilde p^{a+y-1}(1-\tilde p^{b+n+y-1})d\tilde p=1$
+$\int \pi(p)dp=1\implies \int\frac{1}{B(a+y,b+n-y)}\tilde p^{a+y-1}(1-\tilde p^{b+n-y-1})d\tilde p=1$
 
 Hence, $\pi(p|y)\sim Beta(a+y, b+n-y)$

@@ -14,7 +14,7 @@ header-includes:
 
 ```
 ## \textcolor{RoyalBlue}{Lab 1: Mixture of Beta Priors}
-#### Author:_____(Insert your name here) _____
+#### Author: Shang-Chieh (Jay), Wei
 
 #### \textcolor{Bittersweet}{Total Grade for Lab 1: /15} 
 #### \textcolor{Bittersweet}{Comments (optional)} 
@@ -41,13 +41,23 @@ It is strongly recommended that you knit your document regularly (minimally afte
 
 ```
 
+
+```{r}
+require(ggplot2)
+require(gridExtra)
+require(ProbBayes)
+require(tidyverse)
+crcblue <- "#2905a1"
+```
+
+
 ## \textcolor{RoyalBlue}{Mixture of Beta Priors}
 
 Estimate the probability $p$ of teen recidivism based on a study in which there were $n = 43$ individuals released from incarceration and $y = 15$ re-offenders within 36 months.
 
 #### \textcolor{RoyalBlue}{Exercise 1: } Using a $\textrm{Beta}(2,8)$ prior for $p$, plot the prior $\pi(p)$ and the posterior $\pi(p \mid y)$ as functions of $p$. Find the posterior mean and standard deviation of $p$. Find a $95\%$ quantile-based credible interval. You can use either the exact solution or approximation through Monte Carlo simulation.
 
-```{r, eval=FALSE}
+```{r}
 # If you use the exact solution...
 # Here is some sample script to plot multiple Beta densities on the same graph
 # Delete "eval=FALSE" above to see output
@@ -62,7 +72,13 @@ ggplot(data = data.frame(p = c(0, 1)), aes(p)) +
   ylab("Density")
 ```
 
-```{r, eval=FALSE}
+
+
+
+
+
+
+```{r}
 # If you use approximation through Monte Carlo simulation...
 # Here is some sample script to generate Beta samples and
 # plot multiple Beta densities on the same graph
@@ -84,11 +100,153 @@ ggplot(data = df_long, aes(value, colour = variable)) +
   geom_density() + 
   xlab("p") + ylab("Density")
 ```
+
+
+Below is the solutions.
+
+We first show analytic solutions.
+
+```{r}
+# exact solution
+n <- 43
+y <- 15
+
+require(ggplot2)
+
+ggplot(data = data.frame(p = c(0, 1)), aes(p)) + 
+  stat_function(fun = dbeta, args = list(shape1 = 2, shape2 = 8), aes(color = "Beta(2, 8)")) + 
+  stat_function(fun = dbeta, args=list(shape1 = 2+y, shape2= 8+n-y), aes(color = "Beta(17, 36)")) +
+  annotate(geom = "text", x = .125, y = 4.2,
+           size = 8, label = "Prior") + 
+  annotate(geom = "text", x = .65, y = 6,
+           size = 8, label="Posterior") +
+  ylab("Density")
+
+
+```
+
+Recall: for a Beta(a,b), the mean is $\frac{a}{a+b}$, and the variance is $\frac{ab}{(a+b+1)(a+b)^2}$
+
+```{r}
+# calculate analytic solution of mean and std.dev
+
+a=2+y
+b=8+n-y
+cat("The posterior mean of p is ", a/(a+b), sep="", "\n")
+cat("The posterior std.deviation of p is ", sqrt(a*b/((a+b+1)*(a+b)^2)), sep="", "\n")
+
+# calculate 95% quantile-based credible interval
+
+c(qbeta(0.025, a, b), qbeta(0.975, a, b))
+```
+
+```{r}
+beta_interval(0.95, c(a, b), Color= crcblue) +
+  theme(text=element_text(size=18))
+```
+
+Now, we show approximated solutions via Monte Carlo simulation.
+
+```{r}
+# approximation through Monte Carlo simulation
+
+require(reshape2)
+require(ggplot2)
+set.seed(123)
+S <- 1000
+Beta28samples <- rbeta(S, shape1 = 2, shape2 = 8)
+Betaabsamples <- rbeta(S, shape1 = a, shape2 = b)
+df <- as.data.frame(cbind(seq(1:S), Beta28samples, Betaabsamples))
+names(df) <- c("Index", "Beta(2, 8)", "Beta(17, 36)")
+df_long <- melt(df, id = "Index")
+
+ggplot(data = df_long, aes(value, colour = variable)) +
+  geom_density() +
+  xlab("p") + ylab("Density")
+  
+```
+
+```{r}
+# The approximation is not bad!!
+mean(Betaabsamples)
+sd(Betaabsamples)
+
+# 95% credible interval
+quantile(Betaabsamples, c(0.025, 0.975))
+```
+
 #### \textcolor{Bittersweet}{Grade for Exercise 1: /5} 
 #### \textcolor{Bittersweet}{Comments: }
 
 
 #### \textcolor{RoyalBlue}{Exercise 2: } Repeat Exercise 1, but using a $\textrm{Beta}(8,2)$ prior for $p$.
+
+We first show analytic solutions.
+
+```{r}
+# exact solution
+n <- 43
+y <- 15
+
+require(ggplot2)
+
+ggplot(data = data.frame(p = c(0, 1)), aes(p)) + 
+  stat_function(fun = dbeta, args = list(shape1 = 8, shape2 = 2), aes(color = "Beta(8, 2)")) + 
+  stat_function(fun = dbeta, args=list(shape1 = 8+y, shape2= 2+n-y), aes(color = "Beta(23, 30)")) +
+  annotate(geom = "text", x = .85, y = 4.2,
+           size = 8, label = "Prior") + 
+  annotate(geom = "text", x = .25, y = 6,
+           size = 8, label="Posterior") +
+  ylab("Density")
+```
+
+```{r}
+# calculate analytic solution of mean and std.dev
+
+a=8+y
+b=2+n-y
+cat("The posterior mean of p is ", a/(a+b), sep="", "\n")
+cat("The posterior std.deviation of p is ", sqrt(a*b/((a+b+1)*(a+b)^2)), sep="", "\n")
+
+# calculate 95% quantile-based credible interval
+
+c(qbeta(0.025, a, b), qbeta(0.975, a, b))
+```
+
+```{r}
+beta_interval(0.95, c(a, b), Color= crcblue) +
+  theme(text=element_text(size=18))
+```
+
+Now, we show approximated solutions via Monte Carlo simulation.
+
+```{r}
+# approximation through Monte Carlo simulation
+
+require(reshape2)
+require(ggplot2)
+set.seed(123)
+S <- 1000
+Beta82samples <- rbeta(S, shape1 = 8, shape2 = 2)
+Betaabsamples <- rbeta(S, shape1 = a, shape2 = b)
+df <- as.data.frame(cbind(seq(1:S), Beta82samples, Betaabsamples))
+names(df) <- c("Index", "Beta(8, 2)", "Beta(23, 30)")
+df_long <- melt(df, id = "Index")
+
+ggplot(data = df_long, aes(value, colour = variable)) +
+  geom_density() +
+  xlab("p") + ylab("Density")
+  
+```
+
+```{r}
+# The approximation is not bad!!
+mean(Betaabsamples)
+sd(Betaabsamples)
+
+# 95% credible interval
+quantile(Betaabsamples, c(0.025, 0.975))
+```
 
 #### \textcolor{Bittersweet}{Grade for Exercise 2: /5} 
 #### \textcolor{Bittersweet}{Comments: }
@@ -101,7 +259,7 @@ $$
 $$
 
 
-```{r, eval=FALSE}
+```{r}
 # If you use the exact solution...
 # Here is some sample script to create density of a 75%-25% mixture Beta prior
 # Delete "eval=FALSE" above to see output
@@ -110,7 +268,7 @@ p <- seq(0.001, 0.999, length = 1000)
 mixture <- 0.75*dbeta(p, 1, 1) + 0.25*dbeta(p, 5, 5)
 ```
 
-```{r, eval=FALSE}
+```{r}
 # If you use approximation through Monte Carlo simulation...
 # Here is some sample script to generate draws of a 75%-25% mixture Beta prior
 # Delete "eval=FALSE" above to see output
@@ -119,7 +277,7 @@ set.seed(123)
 S <- 1000
 MixtureBetaSamples <- rep(NA, S)
 for (s in 1:S){
-  component <- rbernoulli(1, 0.75)
+  component <- rbinom(1, 1, 0.75) # this is bernoulli
   if (component == 1){
     MixtureBetaSamples[s] <- rbeta(1, shape1 = 1, shape2 = 1)
   }
@@ -127,11 +285,52 @@ for (s in 1:S){
     MixtureBetaSamples[s] <- rbeta(1, shape1 = 5, shape2 = 5)
 }
 ```
+
+We first show analytic solutions.
+
+```{r}
+p <- seq(0.001, 0.999, length = 1000)
+mixture <- 0.75*dbeta(p, 2, 8) + 0.25*dbeta(p, 8, 2)
+
+
+par(mai=c(0.9, 0.9, 0.1, 0.1))
+plot(x= p, y= mixture, type = "l", col= "red", lwd = 2,
+     ylab ="Density")
+grid()
+
+```
+
+
+Now, we show approximated solutions via Monte Carlo simulation.
+
+```{r}
+set.seed(123)
+S <- 1000
+MixtureBetaSamples <- rep(NA, S)
+for (s in 1:S){
+  component <- rbinom(1, 1, 0.75)
+  if (component == 1){
+    MixtureBetaSamples[s] <- rbeta(1, shape1 = 2, shape2 = 8)
+  }
+  else
+    MixtureBetaSamples[s] <- rbeta(1, shape1 = 8, shape2 = 2)
+}
+
+par(mai=c(0.9, 0.9, 0.1, 0.1))
+hist(MixtureBetaSamples, main=NULL, prob=TRUE, breaks=50)
+lines(p, 0.75*dbeta(p, 2, 8) + 0.25*dbeta(p, 8, 2), col="red", lwd =2) 
+```
+
+This prior suggests that the officers believe values of p ( probability of teen recidivism) can be either high or low. 
+
+In particular they have stronger belief that the values of p will be small.
+
 #### \textcolor{Bittersweet}{Grade for Exercise 3: /5} 
 #### \textcolor{Bittersweet}{Comments: }
 
   
-  
+
+
   
 
 
