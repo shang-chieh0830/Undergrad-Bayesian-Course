@@ -1,0 +1,40 @@
+---
+title: "Solutions_to_Gamma_Poisson"
+output: pdf_document
+date: "2023-04-22"
+---
+
+- Prior $Gamma(a,b)$: complete the prior density
+
+\begin{align}
+\pi(\theta)=\frac{b^a}{\Gamma(a)}\theta^{a-1}exp(-b\theta)
+\end{align}
+
+- Likelihood: complete the joint pmf
+
+\begin{align}
+Pr(Y_1=y_1,...,Y_n=y_n|\theta)&=\prod_{i=1}^{n}p(y_i|\theta)\\
+&=\prod_{i=1}^{n}\frac{\theta^{y_i}exp(-\theta)}{y_i!}=\frac{\theta^{\sum y_i}exp(-n\theta)}{\prod_{i=1}^{n}y_i !}
+\end{align}
+
+- Posterior $Gamma(a+\sum_{i=1}^{n}y_i, b+n)$: derive and recognize the hyper-parameters
+
+\begin{align}
+\pi(\theta|y_1,...,y_n)&\propto \pi(\theta)L(\theta)\\
+&=\theta^{a+\sum y_i -1}exp(-(b+n)\theta)
+\end{align}
+
+- Prediction
+
+\begin{align}
+Step 1:\tilde \theta &\sim Gamma(a+\sum y_i, b+n)\\
+Step 2:\tilde y &\sim Poisson(\tilde \theta)
+\end{align}
+
+
+Note: In Binomial case, we have
+
+\begin{align}
+Step 1:\tilde p &\sim Beta(a+y, b+n-y)\\
+Step 2:\tilde y &\sim Binomial(n, \tilde p)
+\end{align}

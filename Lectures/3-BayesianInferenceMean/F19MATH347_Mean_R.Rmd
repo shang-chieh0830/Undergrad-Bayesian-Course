@@ -112,7 +112,7 @@ beta_n <- beta+1/2*sum((CEsample$LogTotalExpLastQ-mu)^2)
 
 set.seed(123)
 S <- 1000
-invsigma2_post <- rgamma(S, shape=alpha_n, rate=beta_n)
+invsigma2_post <- rgamma(S, shape=alpha_n, rate=beta_n) # 1/sigma^2
 df <- as.data.frame(invsigma2_post)
 ```
 
