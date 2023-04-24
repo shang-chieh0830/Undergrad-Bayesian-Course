@@ -1,0 +1,322 @@
+---
+title: "Bayesian Statistics- HW3"
+author: "魏上傑"
+date: "2023-04-23"
+output:
+  pdf_document:
+    latex_engine: xelatex
+  html_document:
+    df_print: paged
+mainfont: Times New Roman
+fontsize: 12pt
+papersize: a4
+geometry: margin=1.5cm
+lang: "zh-tw"
+documentclass: ctexart
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(ggplot2)
+require(gridExtra)
+require(ProbBayes)
+require(tidyverse)
+crcblue <- "#2905a1"
+```
+
+1. 
+
+(a)
+
+Alex believes there will be 8 successes and 2 failures, corresponding to the Beta(8,2).
+
+(b)
+
+```{r}
+# Benedit believes the 0.2 quantile of the prior is 0.3
+# and the 0.9 quantile of the prior is 0.4
+beta.select(list(p=0.2, x=0.3), list(p=0.9, x=0.4))
+``` 
+
+Thus, we will use Beta(34.95, 67.98) for Benedit's prior.
+
+(c)
+
+```{r}
+ggplot(data.frame(x=c(0,1)), aes(x)) +
+  stat_function(fun = dbeta, geom="line",
+                aes(color = "Beta(8,2)"),
+                linetype= "solid",
+                linewidth=1.5,
+                args = list(shape1=8,
+                            shape2=2)) +
+  stat_function(fun = dbeta, geom="line",
+                aes(color="Beta(34.95, 67.98)"),
+                linetype= "solid",
+                linewidth=1.5,
+                args = list(shape1=34.95,
+                            shape2=67.98)) +
+  xlab("p") + ylab("Density") +
+  scale_color_manual(name="Color",
+                     values=c("Beta(8,2)"=crcblue,
+                              "Beta(34.95, 67.98)"= "red")) +
+  increasefont()
+```
+
+```{r}
+# Calculate the posterior
+Alex_ab <- c(8,2)
+Ben_ab <- c(34.95, 67.98)
+yny <- c(692, 1048-692)
+Alex_ab_new <- Alex_ab + yny
+Ben_ab_new <- Ben_ab + yny
+```
+
+
+```{r}
+ggplot(data.frame(x=c(0,1)), aes(x)) +
+  stat_function(fun = dbeta, geom="line",
+                aes(color = "Beta(700, 358)"),
+                linetype= "solid",
+                linewidth=1.5,
+                args = list(shape1=700,
+                            shape2=358)) +
+  stat_function(fun = dbeta, geom="line",
+                aes(color="Beta(727, 424)"),
+                linetype= "solid",
+                linewidth=1.5,
+                args = list(shape1=727,
+                            shape2=424)) +
+  xlab("p") + ylab("Density") +
+  scale_color_manual(name="Color",
+                     values=c("Beta(700, 358)"=crcblue,
+                              "Beta(727, 424)"= "red")) +
+  increasefont()
+```
+
+```{r}
+beta_interval(0.95, c(700, 358), Color= crcblue) +
+  theme(text = element_text(size=18))
+```
+
+```{r}
+beta_interval(0.95, c(727, 424), Color= "red") +
+  theme(text = element_text(size=18))
+```
+
+(d)
+
+```{r}
+# prior preditive checks for Alex
+S <- 1000
+a <- 8; b <- 2
+n <- 1048; y <- 692
+
+newy <- as.data.frame(rep(NA, S))
+names(newy)= c("y")
+
+for (s in 1:S){
+  pred_p_sim <- rbeta(1, a+y, b+n-y)
+  pred_y_sim <- rbinom(1, n, pred_p_sim)
+  newy[s,] = pred_y_sim
+}
+
+ggplot(data=newy, aes(newy$y))+
+  geom_histogram(breaks=seq(620, 750, by=0.5), fill = crcblue)+
+  annotate("point", x=692, y=0, colour = "red", size =5)+
+  xlab("y")
+```
+
+```{r}
+# prior preditive checks for Ben
+S <- 1000
+a <- 34.95; b <- 67.98
+n <- 1048; y <- 692
+
+newy <- as.data.frame(rep(NA, S))
+names(newy)= c("y")
+
+for (s in 1:S){
+  pred_p_sim <- rbeta(1, a+y, b+n-y)
+  pred_y_sim <- rbinom(1, n, pred_p_sim)
+  newy[s,] = pred_y_sim
+}
+
+ggplot(data=newy, aes(newy$y))+
+  geom_histogram(breaks=seq(620, 750, by=0.5), fill = crcblue)+
+  annotate("point", x=692, y=0, colour = "red", size =5)+
+  xlab("y")
+```
+
+From the prior predictive checks, we conclude that Alex's prior is more appropriate for this teenagers and television data since the red dot is closer to Alex's model.
+
+
+2. 
+
+(a)
+
+```{r}
+S <- 1000
+a <- 8; b <- 2
+n <- 1048; y <- 692
+BetaSamples <- rbeta(S, a+y, b+n-y)
+odds <- BetaSamples/ (1-BetaSamples)
+mean(odds)
+median(odds)
+quantile(odds, c(0.025, 0.975))
+```
+
+(b)
+
+```{r}
+S <- 1000
+a <- 34.95; b <- 67.98
+n <- 1048; y <- 692
+BetaSamples <- rbeta(S, a+y, b+n-y)
+odds <- BetaSamples/ (1-BetaSamples)
+mean(odds)
+median(odds)
+quantile(odds, c(0.025, 0.975))
+```
+
+(c) As above.
+
+
+3.
+
+```{r}
+set.seed(123)  # for reproducibility
+alpha <- 15.06
+beta <- 10.56
+S <- c(10, 100, 500, 1000, 5000)
+results <- list()
+
+for (s in S) {
+  ps <- rbeta(s, alpha, beta)  # generate s random samples from Beta distribution
+  lower <- quantile(ps, 0.05)  # find 5th percentile
+  upper <- quantile(ps, 0.95)  # find 95th percentile
+  results[[as.character(s)]] <- c(lower, upper)  # store credible interval
+}
+
+# print results
+for (s in S) {
+  cat("Middle 90% credible interval for S =", s, "is [", round(results[[as.character(s)]][1], 3), ",", round(results[[as.character(s)]][2], 3), "]\n")
+}
+
+
+```
+
+As we can see from the results, the simulated credible intervals become narrower as the simulation size S increases. This is because larger sample sizes result in more precise estimates of the true distribution, and thus the credible intervals become more accurate. However, we can also see that even for small sample sizes like S = 10, the simulated credible interval still contains the true posterior interval estimate of [0.427, 0.741], although it is wider than the intervals obtained with larger sample sizes.
+
+In summary, simulating a large number of random samples results in more precise credible intervals, but even with small sample sizes, it is still possible to obtain credible intervals that contain the true posterior interval estimate.
+
+
+4. 
+
+(a)
+
+\begin{align}
+L(\mu_A) &=\prod_{i=1}^{n_A}\frac{1}{4\sqrt{2\pi}}exp(-\frac{(y_{A,i}-\mu_A)^2}{2\times4^2})\\
+&=(4^22\pi)^{-\frac{n_A}{2}}exp(-\frac{\sum (y_{A,i}-\mu_A)^2}{2\times 4^2})
+\end{align}
+
+\begin{align}
+L(\mu_N) &=\prod_{j=1}^{n_N}\frac{1}{4\sqrt{2\pi}}exp(-\frac{(y_{N,j}-\mu_N)^2}{2\times4^2})\\
+&=(4^22\pi)^{-\frac{n_N}{2}}exp(-\frac{\sum (y_{N,j}-\mu_N)^2}{2\times 4^2})
+\end{align}
+
+(b)
+
+Since the prior belief about $\mu_A$ and $\mu_N$ are independent, the posterior distributions for $\mu_A$ and $\mu_N$ are independent as well.
+
+
+- The prior distribution
+
+\begin{align}
+\pi(\mu_A)&=\frac{1}{\sqrt{2\pi}\sigma_A}exp(-\frac{(\mu_A-\gamma_A)^2}{2\sigma_A^2})\\
+&=\frac{1}{\sqrt{2\pi}}\phi_A^{\frac 12}exp(-\frac{\phi_A}{2}(\mu_A-\gamma_A)^2)
+\end{align}
+
+\begin{align}
+\pi(\mu_N)&=\frac{1}{\sqrt{2\pi}\sigma_N}exp(-\frac{(\mu_N-\gamma_N)^2}{2\sigma_N^2})\\
+&=\frac{1}{\sqrt{2\pi}}\phi_N^{\frac 12}exp(-\frac{\phi_N}{2}(\mu_N-\gamma_N)^2)
+\end{align}
+
+- The posterior distribution
+
+\begin{align}
+\pi(\mu_A|y_1,...,y_{n_A}, \sigma=\frac{1}{\sqrt{\phi}}=4)&\propto \pi(\mu_A)L(\mu_A)\\
+&\propto exp(-\frac{\phi_A}{2}(\mu_A-\gamma_A)^2)exp(-\frac{\sum (y_{A,i}-\mu_A)^2}{2\times4^2})\\
+&\propto exp(-\frac 12 (\phi_A+n_A\phi)\mu_A^2+\frac 12 (2\phi_A\gamma_A+2n_A\phi \bar y_A)\mu_A)\\
+&\propto exp(\frac 12 (\phi_A+n_A\phi)(\mu_A-\frac{\phi_A\gamma_A+n_A\phi\bar y_A}{\phi_A+n_A\phi})^2)
+\end{align}
+
+Hence, this is a Normal density with mean $\frac{\phi_A\gamma_A+n_A\phi \bar y_A}{\phi_A+n_A\phi}$ and std.dev $\frac{1}{\sqrt{\phi_A+n_A\phi}}$
+
+
+\begin{align}
+\pi(\mu_N|y_1,...,y_{n_N}, \sigma=\frac{1}{\sqrt{\phi}}=4)&\propto \pi(\mu_N)L(\mu_N)\\
+&\propto exp(-\frac{\phi_N}{2}(\mu_N-\gamma_N)^2)exp(-\frac{\sum (y_{N,i}-\mu_N)^2}{2\times4^2})\\
+&\propto exp(-\frac 12 (\phi_N+n_N\phi)\mu_N^2+\frac 12 (2\phi_N\gamma_N+2n_N\phi \bar y_N)\mu_N)\\
+&\propto exp(\frac 12 (\phi_N+n_N\phi)(\mu_N-\frac{\phi_N\gamma_N+n_N\phi\bar y_N}{\phi_N+n_N\phi})^2)
+\end{align}
+
+Hence, this is a Normal density with mean $\frac{\phi_N\gamma_N+n_N\phi \bar y_N}{\phi_N+n_N\phi}$ and std.dev $\frac{1}{\sqrt{\phi_N+n_N\phi}}$
+
+
+5.
+
+(a)
+
+```{r}
+gamma_A <- 0
+sigma_A <- 20
+phi_A <- 1/sigma_A^2
+ybar_A <- 15.2
+phi <- 1/4^2 # sigma=4
+n_A <- 6
+mu_A <- (phi_A*gamma_A+n_A*ybar_A*phi)/(phi_A+n_A*phi)
+sd_A <- sqrt(1/(phi_A+n_A*phi))
+
+S <- 5000
+
+s_A <- rnorm(S, mu_A, sd_A)
+```
+
+```{r}
+gamma_N <- 0
+sigma_N <- 20
+phi_N <- 1/sigma_N^2
+ybar_N <- 6.2
+phi <- 1/(4^2) # sigma=4
+n_N <- 6
+mu_N <- (phi_N*gamma_N+n_N*ybar_N*phi)/(phi_N+n_N*phi)
+sd_N <- sqrt(1/(phi_N+n_N*phi))
+
+S <- 5000
+
+s_N <- rnorm(S, mu_N, sd_N)
+```
+
+```{r}
+d <- s_A-s_N
+sum(d>0)/S
+
+```
+
+(b)
+
+```{r}
+sigma <- 4
+pred_mu_A_sim <- rnorm(1, mu_A, sd_A)
+pred_y_A_sim <- rnorm(n_A, pred_mu_A_sim, sigma)
+
+pred_mu_N_sim <- rnorm(1, mu_N, sd_N)
+pred_y_N_sim <- rnorm(n_N, pred_mu_N_sim, sigma)
+
+S <- 6
+d <- pred_y_A_sim-pred_y_N_sim
+sum(d>0)/S
+
+```
+

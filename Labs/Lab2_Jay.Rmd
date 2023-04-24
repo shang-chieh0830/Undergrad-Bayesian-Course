@@ -14,7 +14,7 @@ header-includes:
 
 ```
 ## \textcolor{RoyalBlue}{Lab 2: Bayesian Inference for Unknown Mean $\mu$}
-#### Author:_____(Insert your name here) _____
+#### Author:_____Shang Chieh (Jay), Wei_____
 
 #### \textcolor{Bittersweet}{Total Grade for Lab 2: /20} 
 #### \textcolor{Bittersweet}{Comments (optional)} 
@@ -68,16 +68,16 @@ When $\sigma$ (or $\phi$) is  known, mean $\mu$ is the only parameter in the lik
 
 ## \textcolor{RoyalBlue}{The CE data example}
 Obtain the CE data sample from Moodle (a .csv file). Below is the sample R script to take log transformation of the \texttt{TotalExpLastQ} variable. 
-```{r, eval=FALSE}
+```{r}
 library(tidyverse)
-CEsample <- read_csv("CEsample1.csv")
+CEsample <- read_csv("CEsample.csv")
 CEsample$LogTotalExpLastQ <- log(CEsample$TotalExpLastQ)
 ```
 
 
 Below is the sample R script to obtain the mean \texttt{mu\_n} and the standard deviation \texttt{sd\_n} for the posterior distribution for $\mu$. Note the prior choice $\pi(\mu) \sim \textrm{Normal}(5, 1)$. Also note the use of the known precision for \texttt{phi <- 1.25}.
 
-```{r, eval=FALSE}
+```{r}
 mu_0 <- 5
 sigma_0 <- 1
 phi_0 <- 1/sigma_0^2
@@ -87,6 +87,7 @@ n <- dim(CEsample)[1]
 
 mu_n <- (phi_0*mu_0+n*ybar*phi)/(phi_0+n*phi) 
 sd_n <- sqrt(1/(phi_0+n*phi))
+
 ```
 
 ## \textcolor{RoyalBlue}{Bayesian Inference for Unknown Mean $\mu$}
@@ -96,9 +97,33 @@ sd_n <- sqrt(1/(phi_0+n*phi))
 
 Hint: For the exact solution, use the \texttt{pnorm()} function; for approximation by Monte Carlo simulation, use the \texttt{rnorm()} function.
 
+```{r}
+1-pnorm(9, mu_n, sd_n, lower.tail = TRUE)
+```
+
+```{r}
+pnorm(9, mu_n, sd_n, lower.tail = FALSE)
+
+# weird, these two should give the same result
+```
+
+
+
+```{r}
+S <- 1000
+NormalSamples <- rnorm(S, mu_n, sd_n)
+sum(NormalSamples >=9)/S
+par(mai=c(0.9,0.9,0.1,0.1))
+hist(NormalSamples, main=NULL, breaks = 50, prob=TRUE)
+x <- seq(min(NormalSamples), max(NormalSamples), length.out=100)
+lines(x, dnorm(x, mu_n, sd_n), lwd=2, col="red")
+```
+
+
+
 
 #### \textcolor{Bittersweet}{Grade for Exercise 1: /4} 
-#### \textcolor{Bittersweet}{Comments: }
+#### \textcolor{Bittersweet}{Comments: As we can see, either from the exact solution or Monte Carlo approximation, the posterior probability is nearly 0. Hence, we reject the claim saying that “the average log total expenditure of a CU is $9$ or more.”}
 
 
 #### \textcolor{RoyalBlue}{Exercise 2: } Create a $95\%$ Bayesian credible interval for the parameter $\mu$. Report on the comparison of the exact solution and approximation by Monte Carlo simulation.
@@ -106,8 +131,20 @@ Hint: For the exact solution, use the \texttt{pnorm()} function; for approximati
 Hint: For the exact solution, use the \texttt{qnorm()} function; for approximation by Monte Carlo simulation, use the \texttt{rnorm()} function.
 
 
+```{r}
+# 95% credible interval
+c(qnorm(0.025, mu_n, sd_n), qnorm(0.975, mu_n, sd_n))
+```
+
+```{r}
+S <- 1000
+NormalSamples <- rnorm(S, mu_n, sd_n)
+quantile(NormalSamples, c(0.025,0.975))
+```
+
+
 #### \textcolor{Bittersweet}{Grade for Exercise 2: /4} 
-#### \textcolor{Bittersweet}{Comments: }
+#### \textcolor{Bittersweet}{Comments: One can increase the sample size S, and the Monte Carlo approximation will get closer to the exact solution}
 
 
 ## \textcolor{RoyalBlue}{Bayesian prediction}
@@ -129,18 +166,31 @@ One simulates a value from the predictive distribution in two steps: first, one 
 Hint: use the \texttt{rnorm()} function; use the known \texttt{phi <- 1.25} and/or \texttt{sigma <- 0.9}.
 
 
-```{r, eval=FALSE}
+```{r}
+S <- 1000
+pred_mu_sim <- rnorm(S, mu_n, sd_n) #sample mu from posterior
+
+# note that phi=1/sigma^2, hence sigma=1/sqrt(phi)
+phi <- 1.25
+pred_y_sim <- rnorm(S, pred_mu_sim, 1/sqrt(phi))
+
+y_pred <- data.frame(y=pred_y_sim)
+
+```
+
+
+```{r}
 # Here is some sample script to create the plot of the predicted log expenditure
 # Suppose y_pred is the vector storing the predicted values, and the column name is y
 
 ggplot(data = y_pred, aes(y_pred$y)) +
-geom_histogram(breaks = seq(0, 20, by=0.5), fill = blue) +
+geom_histogram(breaks = seq(0, 20, by=0.5), fill = "blue") +
 xlab("y") + theme(text = element_text(size=10))
 ```
 
 
 #### \textcolor{Bittersweet}{Grade for Exercise 3: /4} 
-#### \textcolor{Bittersweet}{Comments: }
+#### \textcolor{Bittersweet}{Comments: Note that Normal distribution is continuous, so the plot is different from Binomial in Lecture 2}
 
 ## \textcolor{RoyalBlue}{Posterior predictive checking} 
   
@@ -169,20 +219,44 @@ While Bayesian prediction is focused on simulating one $\tilde{Y}$ from one post
 
 Hint: use the \texttt{rnorm()} function; use the known \texttt{phi <- 1.25} and/or \texttt{sigma <- 0.9}.
 
-```{r, eval=FALSE}
+```{r}
+S <- 1000
+n <- 6208
+phi <- 1.25
+mean_ppc <- as.data.frame(rep(NA, S))
+names(mean_ppc)=c("mean")
+sample_mean <- mean(CEsample$LogTotalExpLastQ)
+for(s in 1:S){
+  pred_mu_sim <- rnorm(1, mu_n, sd_n)
+  pred_y_sim <- rnorm(n, pred_mu_sim, 1/sqrt(phi))
+  mean_ppc[s,] <- mean(pred_y_sim)
+}
+
+```
+
+
+
+```{r}
 # Here is some sample script to create the plot of the predicted sample mean of log expenditure
 # Suppose mean_ppc is the vector storing the predicted sample mean values, 
 # and the column name is mean 
 # Further suppose the actual sample mean stored as sample_mean
 
 ggplot(data = mean_ppc, aes(mean_ppc$mean)) +
-geom_histogram(breaks = seq(0, 20, by=0.5), fill = blue) +
+geom_histogram(breaks = seq(8.00, 9.00, by=0.01), fill = "blue") +
 annotate("point", x = sample_mean, y = 0, colour = "red", size = 5) + 
 xlab("y") + theme(text = element_text(size=10))
 ```
 
+```{r}
+sum(mean_ppc>sample_mean)/S
+```
+
+```{r}
+1-sum(mean_ppc>sample_mean)/S
+```
 
 
 #### \textcolor{Bittersweet}{Grade for Exercise 4: /8} 
-#### \textcolor{Bittersweet}{Comments: }
+#### \textcolor{Bittersweet}{Comments: It seems that the model fits pretty well, the red dot is not at the extreme of the histogram and either probability is large.}
 
