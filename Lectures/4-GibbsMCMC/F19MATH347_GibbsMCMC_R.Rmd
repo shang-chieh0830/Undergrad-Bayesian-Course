@@ -84,6 +84,67 @@ ggplot(data = data.frame(y = c(-5, 5)), aes(y)) +
 
 # Prior and posterior distributions for mean AND standard deviation
 
+## Some derivations
+
+Notice that we have unknown $\mu$ and $\sigma$ here. They are **both** unknown.
+And we derive the full conditional posterior distributions (conditioning on all of the data and every other parameters, even though they are unknown).
+
+e.g.
+
+- $\mu|y_1,...,y_n,\phi$
+
+- $\phi|y_1,...,y_n,\mu$
+
+
+Assuming independence, joint density = product of marginal density
+
+
+\begin{align}
+\pi(\mu, \sigma)&=\pi_1(\mu)\pi_2(\sigma)\\
+L(\mu, \sigma)&=f(y_1,...,y_n| \mu, \sigma)\\
+\implies \pi(\mu,\sigma|y_1,...,y_n) &\propto \pi(\mu, \sigma)L(\mu, \sigma)
+\end{align}
+
+Then we need to derive the probability distribution of $\mu|y_1,..,y_n,\phi$ and $\phi|y_1,...,y_n,\mu$
+
+
+\begin{align}
+\pi(\mu, \sigma)&=\pi_1(\mu)\pi_2(\sigma)\\
+&=\frac{1}{\sqrt{2\pi\sigma_0^2}}exp(-\frac{(\mu-\mu_0)^2}{2\sigma_0^2})\frac{\beta^{\alpha}}{\Gamma(\alpha)}(\frac{1}{\sigma^2})^{\alpha-1}exp(-\frac{\beta}{\sigma^2})
+\end{align}
+
+\begin{align}
+L(\mu, \sigma)&=f(y_1,...,y_n|\mu, \sigma)\\
+&=\prod_{i=1}^{n}[\frac{1}{\sqrt{2\pi\sigma^2}}exp(-\frac{(y_i-\mu)^2}{2\sigma^2})]\\
+&=(\frac{1}{\sqrt{2\pi\sigma^2}})^nexp(-\frac{\sum (y_i-\mu)^2}{2\sigma^2})
+\end{align}
+
+Since
+
+\begin{align}
+\pi(\mu, \sigma|y_1,...,y_n)\propto \pi(\mu, \sigma)L(\mu, \sigma)
+\end{align}
+
+so we have
+
+\begin{align}
+\pi(\mu|y_1,...,y_n,\sigma)\propto exp(-\frac{(\mu-\mu_0)^2}{2\sigma_0^2})exp(-\frac{\sum (y_i-\mu)^2}{2\sigma^2})
+\end{align}
+
+\begin{align}
+\pi(\frac{1}{\sigma^2}|y_1,...,y_n,\mu)\propto (\frac{1}{\sigma^2})^{\alpha-1}exp(-\frac{\beta}{\sigma^2})(\frac{1}{\sigma^2})^{\frac n2}exp(-\frac{\sum (y_i-\mu)^2}{2\sigma^2})
+\end{align}
+
+In general, let's say we have 4 unknown parameters $\theta_1,\theta_2,\theta_3,\theta_4$ and the joint prior $\pi(\theta_1,\theta_2,\theta_3,\theta_4)$ and the likelihood $L(\theta_1,\theta_2,\theta_3,\theta_4)$. Then we have $\pi(\theta_1,\theta_2,\theta_3,\theta_4|y_1,...,y_n)\propto \pi(\theta_1,\theta_2,\theta_3,\theta_4)L(\theta_1,\theta_2,\theta_3,\theta_4)$.
+
+And then, we get 
+
+- $\pi(\theta_1|-)\propto...$
+- $\pi(\theta_2|-)\propto...$
+- $\pi(\theta_3|-)\propto...$
+- $\pi(\theta_4|-)\propto...$
+
+
 ## Use R/RStudio to run a Gibbs sampler
 
 ```{r message = FALSE}
@@ -91,7 +152,7 @@ gibbs_normal <- function(input, S, seed){
   set.seed(seed)
   ybar <- mean(input$y)
   n <- length(input$y)
-  para <- matrix(0, S, 2)
+  para <- matrix(0, S, 2) # Sx2 zero matrix
   phi <- input$phi_init
   for(s in 1:S){
     mu1 <- (input$mu_0/input$sigma_0^2 + n*phi*ybar)/
@@ -105,6 +166,9 @@ gibbs_normal <- function(input, S, seed){
   }
   para }
 ```
+
+
+
 
 
 - Run the Gibbs sampler:
@@ -153,6 +217,33 @@ quantile(para_post$phi, c(0.025,0.975))
 ```
 
 
+- Exercise 1: Update the Gibbs sampler to initiate it with `mu_init`. Compare your results to the existing results. You should get similar results meaning that it doesn't matter you start with $\mu$ or $\phi$ if indeed the Gibbs sampler has converted to the true posterior, you can even try different initial values.
+
+```{r message = FALSE}
+gibbs_normal <- function(input, S, seed){
+  set.seed(seed)
+  ybar <- mean(input$y)
+  n <- length(input$y)
+  para <- matrix(0, S, 2) # Sx2 zero matrix
+  mu <- input$mu_init # change here
+  for(s in 1:S){
+    alpha1 <- input$alpha + n/2
+    beta1 <- input$beta + sum((input$y - mu)^2)/2 
+    phi <- rgamma(1, shape = alpha1, rate = beta1)
+    mu1 <- (input$mu_0/input$sigma_0^2 + n*phi*ybar)/
+    (1/input$sigma_0^2 + n*phi)
+    sigma1 <- sqrt(1/(1/input$sigma_0^2 + n*phi))
+    mu <- rnorm(1, mean = mu1, sd = sigma1)
+    para[s, ] <- c(mu, phi)
+  }
+  para }
+```
+
+
+- Exercise 2: Update the Gibbs sampler to initiate it with `mu_init` and `phi_init`. Compare your results to the existing results.
+
+
+
 # Use JAGS (Just Another Gibbs Sampler) and Bayesian inferences
 
 ## JAGS for unknown mean and standard deviation case 
@@ -169,7 +260,7 @@ quantile(para_post$phi, c(0.025,0.975))
     \vspace{3mm}
     
 ```{r message = FALSE, eval = FALSE}
-install.packages("runjags")
+#install.packages("runjags")
 ```
     
 ```{r message = FALSE}
@@ -337,7 +428,7 @@ plot(posterior_2chains, vars = "mu")
 \vspace{3mm}
 
 ```{r message = FALSE, eval = FALSE}
-install.packages("coda")
+# install.packages("coda")
 ```
 
 ```{r}
