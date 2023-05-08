@@ -1,0 +1,138 @@
+
+library(bayesrules)
+library(tidyverse)
+library(janitor)
+
+#4.4
+
+# Run multiplot function from the Chapter 3 R code, then:
+
+a44=plot_beta(1, 2)+ggtitle("beta(1,2)")
+b44=plot_beta(0.5, 1)+ggtitle("beta(0.5,1)")
+c44=plot_beta(3, 10)+ggtitle("beta(3,10)")
+d44=plot_beta(2, 0.1)+ggtitle("beta(2,0.1)")
+
+multiplot(a44,c44,b44,d44, cols=2)
+
+#4.10
+
+# Run multiplot function from the Chapter 3 R code, then:
+a410=plot_beta_binomial(alpha=0.5,beta=0.5,y=8,n=10)+ggtitle("4.10(a)")
+b410=plot_beta_binomial(alpha=0.5,beta=0.5,y=3,n=13)+ggtitle("4.10(b)")
+c410=plot_beta_binomial(alpha=10,beta=1,y=2,n=16)+ggtitle("4.10(c)")
+d410=plot_beta_binomial(alpha=8,beta=3,y=7,n=10)+ggtitle("4.10(d)")
+e410=plot_beta_binomial(alpha=2,beta=2,y=3,n=6)+ggtitle("4.10(e)")
+f410=plot_beta_binomial(alpha=1,beta=1,y=29,n=31)+ggtitle("4.10(f)")
+
+multiplot(a410,c410,e410,b410,d410,f410, cols=2)
+
+
+# 4.19
+# Import data
+data(bechdel, package = "bayesrules")
+
+bechdel %>% filter(year==1980) %>% tabyl(binary)
+
+# Start with 1980 data:
+summarize_beta_binomial(alpha = 1, beta = 1, y = 4, n = 14)
+
+bechdel %>% filter(year==1990) %>% tabyl(binary)
+
+# Next, 1990 data:
+summarize_beta_binomial(alpha = 5, beta = 11, y = 6, n = 15)
+
+
+bechdel %>% filter(year==2000) %>% tabyl(binary)
+
+# Next, 2000 data:
+summarize_beta_binomial(alpha = 11, beta = 20, y = 29, n = 63)
+
+# All data at once:
+bechdel %>% filter(year==1980|year==1990|year==2000) %>% tabyl(binary)
+
+summarize_beta_binomial(alpha = 1, beta = 1, y = 39, n = 92)
+
+
+# 5 (a)
+
+y <- c(212, 249, 250, 240, 210, 234, 195, 199, 222, 213, 233, 251)
+
+ybar <- mean(y); n <- length(y)
+
+#### Case when mean and variance are both unknown:
+my.alpha <- 1100; my.beta <- 250000  
+# prior parameters for normal prior on mu:
+my.delta <- 220; s0 <- 1  # low value of s0 indicates lack of prior knowledge
+library(TeachingDemos)
+library(pscl)  # loading pscl package, to use inverse gamma distribution
+
+### Point estimates for sigma^2:
+p.mean.sig.sq <- (my.beta + 0.5*(sum(y^2) - n*(ybar^2)) ) / (my.alpha + n/2 - 0.5 - 1)
+p.median.sig.sq <- qigamma(0.50, my.alpha + n/2 - 0.5, my.beta + 0.5*( sum(y^2) - n*(ybar^2) ) )
+
+#### INFERENCE ABOUT mu:
+
+# Randomly sample many values for the posterior of sigma^2:
+sig.sq.values <- rigamma(n=1000000,alpha=my.alpha + n/2 - 0.5, beta=my.beta + 0.5*( sum(y^2) - n*(ybar^2) ) )
+
+# Randomly sample many values from the posterior of mu, GIVEN the sampled values of sigma^2 above:
+
+mu.values <- rnorm(n=1000000,mean=((sum(y)+my.delta*s0)/(n+s0)), sd=sqrt(sig.sq.values/(n+s0)) )
+
+# Point estimates for sigma^2 and mu:
+round(median(sig.sq.values),4) # or could do posterior mean
+round(median(mu.values),4)
+
+# 95% HPD interval estimates for sigma^2 and mu:
+round(emp.hpd(sig.sq.values),4)
+round(emp.hpd(mu.values),4)
+
+# 5(b)
+
+y <- c(212, 249, 250, 240, 210, 234, 195, 199, 222, 213, 233, 251)
+ybar <- mean(y); n <- length(y)
+
+# Suppose we knew sigma^2 = 228:
+
+# prior parameters for normal prior on mu:
+my.delta <- 220; my.tau <- 5
+
+
+### Point estimates for mu:
+posterior.mean <- ( (my.delta/(my.tau^2) + sum(y)/228)/(1/(my.tau^2) + n/228) )
+posterior.median <- qnorm(0.50, mean = ( (my.delta/(my.tau^2) + sum(y)/228)/(1/(my.tau^2) + n/228) ), 
+                sd = sqrt( 228*(my.tau^2) / (228 + n*(my.tau^2)) ) )
+print(paste("posterior.mean=", round(posterior.mean,3), 
+      "posterior.median=", round(posterior.median,3)))
+
+### Interval estimate for mu:
+
+hpd.95 <- hpd(qnorm, mean = ( (my.delta/(my.tau^2) + sum(y)/228)/(1/(my.tau^2) + n/228) ), 
+                sd = sqrt(228*(my.tau^2) / (228 + n*(my.tau^2)) ), conf=0.95)
+round(hpd.95, 3)
+
+
+#5.5
+
+plot_gamma(s=400,r=80)
+
+#5.6
+y<-c(7, 3, 8, 9, 10, 12)
+sum(y)
+plot_gamma_poisson(shape = 400, rate = 80, sum_y = 49, n = 6)
+
+
+#5.12
+data(football)
+control_subjects <- football %>%
+  filter(group == "control")
+
+control_subjects %>%
+  summarize(mean(volume))
+  
+plot_normal_normal(mean = 6.5, sd = 0.4, sigma = 0.5,
+                   y_bar = 7.6026, n = 25)
+
+summarize_normal_normal(mean = 6.5, sd = 0.4, sigma = 0.5,
+                        y_bar = 7.6026, n = 25)
+

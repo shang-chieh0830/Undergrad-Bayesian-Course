@@ -1,0 +1,255 @@
+
+# Load packages
+library(bayesrules)
+library(rstanarm)
+library(bayesplot)
+library(tidyverse)
+library(tidybayes)
+library(broom.mixed)
+
+## Problem 12.5
+
+data(bald_eagles)
+
+eagles_model <- stan_glm(count ~ year+hours, 
+                                 data=bald_eagles,
+                                 family = poisson,
+                                 prior_intercept = normal(0, 0.5),
+                                 prior = normal(0, 2.5, autoscale = TRUE), 
+                                 chains = 4, iter = 5000*2, 
+                                 prior_PD = FALSE)
+
+pp_check(eagles_model, plotfun = "hist", nreps = 5) + 
+  xlab("count")
+
+# looks like a good fit...
+
+tidy(eagles_model, conf.int = TRUE, conf.level = 0.95)
+
+# Year looks important, but "number of hours" may not be an important predictor (credible interval for beta_2 includes 0)
+ 
+prediction_summary(model = eagles_model, data = bald_eagles)
+poisson_cv <- prediction_summary_cv(model = eagles_model, 
+                                   data = bald_eagles, k = 5)
+poisson_cv$cv
+
+eagles_model_int <- stan_glm(count ~ year+hours+year:hours, 
+                                 data=bald_eagles,
+                                 family = poisson,
+                                 prior_intercept = normal(0, 0.5),
+                                 prior = normal(0, 2.5, autoscale = TRUE), 
+                                 chains = 4, iter = 5000*2, 
+                                 prior_PD = FALSE)
+
+tidy(eagles_model_int, conf.int = TRUE, conf.level = 0.95)
+
+prediction_summary(model = eagles_model_int, data = bald_eagles)
+poisson_cv_int <- prediction_summary_cv(model = eagles_model_int, 
+                                   data = bald_eagles, k = 5)
+poisson_cv_int$cv
+
+# Calculate ELPD for the models
+loo_1 <- loo(eagles_model)
+loo_2 <- loo(eagles_model_int)
+loo_1$estimates
+loo_2$estimates
+
+
+## Problem 13.7:
+
+# Load and process the data
+data(hotel_bookings)
+
+# Prior belief:
+# On a "typical" client, there is 0.25 chance of cancellation.
+# prior mean on CENTERED beta_0 is  log(0.25/(1-0.25)) = -1.1
+
+# The prior sd on CENTERED beta_0 of 0.55 implies 
+# a 95% chance the log-odds of cancellation on a typical day is between -2.2 and 0.
+# Converts to an odds of between 0.11 and 1
+# or a probability of between 0.1 and 0.50.
+
+hotel_model <- stan_glm(
+   is_canceled ~ lead_time+previous_cancellations+is_repeated_guest+average_daily_rate, 
+  data = hotel_bookings, family = binomial,
+  prior_intercept = normal(-1.1, 0.55),
+  prior = normal(c(1,1,-1,0), 2.5, autoscale = TRUE), 
+  chains = 4, iter = 5000*2)
+
+tidy(hotel_model, effects = "fixed", conf.int = TRUE, conf.level = 0.80)
+
+mcmc_trace(hotel_model)
+
+mcmc_dens(hotel_model)
+
+
+###############################################
+# Using base R
+###############################################
+
+library(mvtnorm)
+# May need to install the mvtnorm package first?
+# If so, type at the command line:  install.packages("mvtnorm", dependencies=T)
+# while plugged in to the internet.
+
+
+library(bayesrules)
+data(bald_eagles)
+y <- bald_eagles$count
+x1.init <- bald_eagles$year
+x1 <- x1.init-2000
+x2 <- bald_eagles$hours
+x1x2 <- x1*x2
+
+
+X <- cbind(rep(1,times=length(x1)), x1, x2, x1x2)
+
+p <- dim(X)[2]  # number of columns of matrix X
+
+beta.prior.mean <- c(0,0,0,0)  
+
+beta.prior.sd <- rep(10,times=p)
+
+k<-1 # Can adjust this k up or down if the acceptance rate is too high or low...
+proposal.cov.matrix <- k*var(log(y+1/2))*solve(t(X)%*%X)  
+# should be reasonable in this case:   should be close to (sigma^2)*(X'X)^{-1}
+
+S <- 100000  # Make this large (especially if you need to thin the chain) as long as it doesn't take too much time
+beta.current <- beta.prior.mean # initial value for M-H algorithm, reasonable to use the prior mean vector
+acs <- 0 # will be to track "acceptance rate"
+
+beta.values <- matrix(0,nrow=S,ncol=p)  # will store sampled values of beta vector
+
+for (s in 1:S) {
+ beta.proposed <- t(rmvnorm(1, beta.current, proposal.cov.matrix))
+
+ log.accept.ratio <- sum(dpois(y,exp(X %*% beta.proposed), log=T)) - sum(dpois(y,exp(X %*% beta.current), log=T)) +
+        sum(dnorm(beta.proposed, beta.prior.mean, beta.prior.sd, log=T)) - 
+        sum(dnorm(beta.current, beta.prior.mean, beta.prior.sd, log=T) )
+
+  if (log.accept.ratio > log(runif(1)) ) {
+    beta.current <- beta.proposed
+    acs <- acs + 1
+  }
+
+beta.values[s,] <- beta.current
+}
+
+acs/S  # gives the acceptance rate
+
+## Thinning (every 5th value):
+
+beta.values.thin <- beta.values[5*(1:(S/5) ),]
+
+## Burn-in:
+
+beta.values.thin.b <- beta.values.thin[-(1:BurnIn),]
+
+par(mfrow=c(2,2))
+ acf(beta.values.thin.b[,1])
+ acf(beta.values.thin.b[,2])
+ acf(beta.values.thin.b[,3])
+ acf(beta.values.thin.b[,4])
+par(mfrow=c(1,1))
+dev.new()
+par(mfrow=c(2,2))
+ plot(beta.values.thin.b[,1],type='l')
+ plot(beta.values.thin.b[,2],type='l')
+ plot(beta.values.thin.b[,3],type='l')
+ plot(beta.values.thin.b[,4],type='l')
+par(mfrow=c(1,1))
+
+### Posterior summary:
+
+post.medians <- apply(beta.values.thin.b,2,median)  # Posterior medians for each regression coefficent
+
+######
+
+
+library(mvtnorm)
+# May need to install the mvtnorm package first?
+# If so, type at the command line:  install.packages("mvtnorm", dependencies=T)
+# while plugged in to the internet.
+
+     
+y <- hotel_bookings$is_canceled; x1 <- hotel_bookings$lead_time; 
+x2 <- hotel_bookings$previous_cancellations; x3 <- hotel_bookings$is_repeated_guest;
+x4 <- hotel_bookings$average_daily_rate
+
+# make y  numeric for the calculations below:
+
+y<-as.numeric(y); # Converts to 1's and 2's
+y <- y-1 # Converts to 0's and 1's
+
+
+X <- cbind(rep(1,times=length(x1)), x1, x2, x3, x4)
+
+beta.prior.mean <- c(1,1,1,-1,0)
+beta.prior.cov <- diag(c(100,40, 40, 40, 40 ))
+
+k<-1 # Can adjust this k up or down if the acceptance rate is too high or low...
+
+logreg.out <- glm(y ~ x1+x2+x3, family=binomial(logit))
+summary(logreg.out)
+
+
+proposal.cov.matrix <- k*solve(t(X)%*%diag(fitted(logreg.out))%*%X)    
+#proposal.cov.matrix <- k*diag(p)
+
+MCMCBetasI <- beta.prior.mean
+V <- proposal.cov.matrix
+mu <- beta.prior.mean
+Sigma_inv <- solve(beta.prior.cov)
+
+j<-0
+BurnIn <- 1000
+TotIter <- 50000  # Make this bigger, especially if you need to do more thinning...
+SaveResults<-matrix(0,nrow=TotIter,ncol=length(beta.prior.mean))
+
+for (i in 1:TotIter){
+# Proposal distribution for beta
+MCMCBetasC <- rmvnorm(1, MCMCBetasI, V)
+MCMCBetasC <- as.vector(MCMCBetasC)
+# Metropolis ratio
+ratio <- ((-k * sum(log(1 + exp(X%*%MCMCBetasC))) + sum(y * X%*%MCMCBetasC) - (1/2) *
+t(MCMCBetasC - mu)%*%Sigma_inv%*%(MCMCBetasC - mu)) - ((-k * sum(log(1 + exp(X%*%MCMCBetasI)))) +
+sum(y * X%*%MCMCBetasI) - (1/2) * t(MCMCBetasI - mu)%*%Sigma_inv%*%(MCMCBetasI - mu)))
+# Accept/reject step
+if(runif(1) < min(1, exp(ratio)))
+{
+MCMCBetasI <- MCMCBetasC
+j <- j+1
+}
+# Saving results
+SaveResults[i,] <- MCMCBetasI
+}
+
+# Acceptance rate:
+acs<- j/TotIter
+acs
+## Thinning (every 5th value):
+S <- TotIter
+beta.values.thin <- SaveResults[5*(1:(S/5) ),]
+
+## Burn-in:
+
+beta.values.thin.b <- beta.values.thin[-(1:BurnIn),]
+
+par(mfrow=c(2,2))
+ acf(beta.values.thin.b[,1])
+ acf(beta.values.thin.b[,2])
+ acf(beta.values.thin.b[,3])
+ acf(beta.values.thin.b[,4])
+par(mfrow=c(1,1))
+dev.new()
+par(mfrow=c(2,2))
+ plot(beta.values.thin.b[,1],type='l')
+ plot(beta.values.thin.b[,2],type='l')
+ plot(beta.values.thin.b[,3],type='l')
+ plot(beta.values.thin.b[,4],type='l')
+par(mfrow=c(1,1))
+
+### Posterior summary:
+
+post.medians <- apply(beta.values.thin.b,2,median)  # Posterior medians for each regression coefficent
+

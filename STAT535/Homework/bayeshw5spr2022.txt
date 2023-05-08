@@ -1,0 +1,57 @@
+STAT 535, Homework 5, Spring 2022:
+
+1) Do Problem 12.3 in the Bayes Rules! book.
+
+2) Do Problem 12.4 in the Bayes Rules! book.
+
+3) Read Exercise 12.5 in the Bayes Rules! book about the bald_eagles data.  
+Fit a Poisson regression model relating Y to X1 and X2.  Use vague/uninformative priors.
+Comment on whether X1 and/or X2 are apparently important or unimportant in explaining the count of eagles sightings.
+In whatever way you choose, assess the fit of the Poisson model and comment on it.
+Fit a model that includes X1, X2, and the interaction X1*X2.  Use whatever model selection technique you like to 
+choose between the interaction model and the no-interaction model.
+
+# Some possibly helpful code for reading in the bald_eagles data set.
+# If you are using stan_glm in the rstanarm package, much of this is not necessary ...
+# you can just use the variables in the bald_eagles data frame directly,
+# and could use year:hours to specify the interaction.
+
+# UPDATE:  If you are using base R and NOT 'stan_glm' to fit the Poisson regression, then it seems like you
+# encounter numerical issues when fitting the interaction model.  To correct this (only necessary if using base R)
+# just redefine the 'Year' predictor (x1) to be 'Years since 2000' ... 
+# this cuts down on the huge values of x1 and x1x2.
+# The modified code is below:
+
+library(bayesrules)
+data(bald_eagles)
+y <- bald_eagles$count
+x1.init <- bald_eagles$year
+x1 <- x1.init-2000
+x2 <- bald_eagles$hours
+x1x2 <- x1*x2
+
+
+4) Do Problem 13.1 in the Bayes Rules! book.
+
+5) Do Problem 13.4(b,c,d) in the Bayes Rules! book.
+
+6) Do Problem 13.5 in the Bayes Rules! book.
+
+7) Do Problem 13.7 in the Bayes Rules! book.  
+[For part (a), the pp_check thing is optional.  
+For part (b), just report the estimated model on the probability scale.]
+
+# Some possibly helpful code for reading in the hotel_bookings data set.
+# If you are using stan_glm in the rstanarm package, much of this is not necessary ...
+# you can just use the variables in the hotel_bookings data frame directly.
+
+library(bayesrules)
+data(hotel_bookings)
+hotel_bookings
+y <- hotel_bookings$is_canceled
+y<-as.numeric(y)-1   # subtracting 1 converts the 1's and 2's to 0's and 1's.
+x1 <- hotel_bookings$lead_time
+x2 <- hotel_bookings$previous_cancellations
+x3 <- hotel_bookings$is_repeated_guest
+x4 <- hotel_bookings$average_daily_rate
+

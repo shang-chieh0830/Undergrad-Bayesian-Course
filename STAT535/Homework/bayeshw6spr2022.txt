@@ -1,0 +1,20 @@
+# Homework 6
+
+Do the following problems from the Bayes Rules! textbook:
+
+Exercise 14.2
+
+Exercise 14.3
+
+Read about the variables in the 'fakenews' data set in the Chapter 14 exercises.
+-Do the visualizations in Exercise 14.6, parts (a) and (b).
+-Do Exercise 14.7
+-Do the model selection in Exercise 14.8 and answer parts (a), (c), and (d) of Exercise 14.8.
+
+Exercise 15.3 
+
+Exercise 15.5 
+
+Exercise 15.7
+
+Exercise 16.3

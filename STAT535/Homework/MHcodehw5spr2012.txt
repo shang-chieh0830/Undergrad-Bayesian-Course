@@ -1,0 +1,30 @@
+
+x<-c(0.92,0.42,3.62,0.89,-0.69,0.45,-0.11,-0.14,-0.47,1.09,-0.34,0.62,0.27)
+y<-c(0.26,1.65,2.10,0.62,-1.16,1.29,-0.82,-0.36,-0.29,0.86,0.19,1.25,0.33)
+
+sum.xsq <- sum(x^2)
+sum.xy <- sum(x*y)
+sum.ysq <- sum(y^2)
+n <- length(x)
+
+S <- 30000
+rho.current <- 0.5 
+acs <- 0 
+
+rho.values <- rep(0,times=S) 
+
+for (s in 1:S) {
+ rho.proposed <- runif(1,min=rho.current-0.2, max=rho.current+0.2)
+ if (rho.proposed < 0) rho.proposed <- abs(rho.proposed)
+ if (rho.proposed > 1) rho.proposed <- (2 - rho.proposed)
+
+log.accept.ratio <-  (-0.5*n*log(1-rho.proposed^2) - (1/(2*(1-rho.proposed^2))*(sum.xsq - 2*rho.proposed*sum.xy + sum.ysq))) -
+                     (-0.5*n*log(1-rho.current^2) - (1/(2*(1-rho.current^2))*(sum.xsq - 2*rho.current*sum.xy + sum.ysq)))
+
+  if (log.accept.ratio > log(runif(1)) ) {
+    rho.current <- rho.proposed
+    acs <- acs + 1
+  }
+
+rho.values[s] <- rho.current
+}

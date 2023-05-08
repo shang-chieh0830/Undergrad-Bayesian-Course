@@ -1,0 +1,21 @@
+#
+# Some helpful pieces of code for the Gibbs Sampler in problem 1, HW 3
+#
+# Note that you will have to add some more code at the beginning and end to
+# do the analysis properly.
+# That is, you'll have to specify delta.init, theta.init, and tot.draws .
+#
+
+mu.delta <- c(-3,0,3)
+
+delta.values <- c(delta.init, rep(NULL, times = tot.draws) )
+theta.values <- c(theta.init, rep(NULL, times = tot.draws) )
+
+for (j in 2:(tot.draws+1) ) {
+ theta.values[j] <- rnorm(n=1, mu.delta[delta.values[j-1]], sd=sqrt(1/3))
+ my.prob.vec.numerators <- c(.45*dnorm(theta.values[j], -3, sd=sqrt(1/3)), 
+                             .10*dnorm(theta.values[j], 0, sd=sqrt(1/3)),
+                             .45*dnorm(theta.values[j], 3, sd=sqrt(1/3)) )
+ my.prob.vec <- my.prob.vec.numerators / sum(my.prob.vec.numerators)
+ delta.values[j] <- sample(1:3, size=1, prob=my.prob.vec)
+}

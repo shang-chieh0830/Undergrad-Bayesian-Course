@@ -1,0 +1,172 @@
+
+# Load packages
+library(bayesrules)
+library(rstanarm)
+library(bayesplot)
+library(tidyverse)
+library(tidybayes)
+library(broom.mixed)
+
+## Problem 12.5
+
+data(bald_eagles)
+
+eagles_model <- stan_glm(count ~ year+hours, 
+                                 data=bald_eagles,
+                                 family = poisson,
+                                 prior_intercept = normal(0, 0.5),
+                                 prior = normal(0, 2.5, autoscale = TRUE), 
+                                 chains = 4, iter = 5000*2, 
+                                 prior_PD = FALSE)
+
+
+
+eagles_model_int <- stan_glm(count ~ year+hours+year:hours, 
+                                 data=bald_eagles,
+                                 family = poisson,
+                                 prior_intercept = normal(0, 0.5),
+                                 prior = normal(0, 2.5, autoscale = TRUE), 
+                                 chains = 4, iter = 5000*2, 
+                                 prior_PD = FALSE)
+
+
+
+
+## Problem 13.7:
+
+# Load and process the data
+data(hotel_bookings)
+
+# Prior belief:
+
+
+hotel_model <- stan_glm(
+   is_canceled ~ lead_time+previous_cancellations+is_repeated_guest+average_daily_rate, 
+  data = hotel_bookings, family = binomial,
+  prior_intercept = normal(-1.1, 0.55),
+  prior = normal(c(1,1,-1,0), 2.5, autoscale = TRUE), 
+  chains = 4, iter = 5000*2)
+
+
+
+###############################################
+# Using base R
+###############################################
+
+library(mvtnorm)
+# May need to install the mvtnorm package first?
+# If so, type at the command line:  install.packages("mvtnorm", dependencies=T)
+# while plugged in to the internet.
+
+
+library(bayesrules)
+data(bald_eagles)
+y <- bald_eagles$count
+x1.init <- bald_eagles$year
+x1 <- x1.init-2000
+x2 <- bald_eagles$hours
+x1x2 <- x1*x2
+
+
+X <- cbind(rep(1,times=length(x1)), x1, x2, x1x2)
+
+p <- dim(X)[2]  # number of columns of matrix X
+
+beta.prior.mean <- c(0,0,0,0)  
+
+beta.prior.sd <- rep(10,times=p)
+
+k<-1 # Can adjust this k up or down if the acceptance rate is too high or low...
+proposal.cov.matrix <- k*var(log(y+1/2))*solve(t(X)%*%X)  
+# should be reasonable in this case:   should be close to (sigma^2)*(X'X)^{-1}
+
+S <- 100000  # Make this large (especially if you need to thin the chain) as long as it doesn't take too much time
+beta.current <- beta.prior.mean # initial value for M-H algorithm, reasonable to use the prior mean vector
+acs <- 0 # will be to track "acceptance rate"
+
+beta.values <- matrix(0,nrow=S,ncol=p)  # will store sampled values of beta vector
+
+for (s in 1:S) {
+ beta.proposed <- t(rmvnorm(1, beta.current, proposal.cov.matrix))
+
+ log.accept.ratio <- sum(dpois(y,exp(X %*% beta.proposed), log=T)) - sum(dpois(y,exp(X %*% beta.current), log=T)) +
+        sum(dnorm(beta.proposed, beta.prior.mean, beta.prior.sd, log=T)) - 
+        sum(dnorm(beta.current, beta.prior.mean, beta.prior.sd, log=T) )
+
+  if (log.accept.ratio > log(runif(1)) ) {
+    beta.current <- beta.proposed
+    acs <- acs + 1
+  }
+
+beta.values[s,] <- beta.current
+}
+
+acs/S  # gives the acceptance rate
+
+
+######
+
+
+library(mvtnorm)
+# May need to install the mvtnorm package first?
+# If so, type at the command line:  install.packages("mvtnorm", dependencies=T)
+# while plugged in to the internet.
+
+library(bayesrules)
+data(hotel_bookings)
+
+y <- hotel_bookings$is_canceled; x1 <- hotel_bookings$lead_time; 
+x2 <- hotel_bookings$previous_cancellations; x3 <- hotel_bookings$is_repeated_guest;
+x4 <- hotel_bookings$average_daily_rate
+
+# make y  numeric for the calculations below:
+
+y<-as.numeric(y); # Converts to 1's and 2's
+y <- y-1 # Converts to 0's and 1's
+
+
+X <- cbind(rep(1,times=length(x1)), x1, x2, x3, x4)
+
+beta.prior.mean <- c(1,1,1,-1,0)
+beta.prior.cov <- diag(c(100,40, 40, 40, 40 ))
+
+k<-1 # Can adjust this k up or down if the acceptance rate is too high or low...
+
+logreg.out <- glm(y ~ x1+x2+x3+x4, family=binomial(logit))
+summary(logreg.out)
+
+
+proposal.cov.matrix <- k*solve(t(X)%*%diag(fitted(logreg.out))%*%X)    
+#proposal.cov.matrix <- k*diag(p)
+
+MCMCBetasI <- beta.prior.mean
+V <- proposal.cov.matrix
+mu <- beta.prior.mean
+Sigma_inv <- solve(beta.prior.cov)
+
+j<-0
+BurnIn <- 1000
+TotIter <- 50000  # Make this bigger, especially if you need to do more thinning...
+SaveResults<-matrix(0,nrow=TotIter,ncol=length(beta.prior.mean))
+
+for (i in 1:TotIter){
+# Proposal distribution for beta
+MCMCBetasC <- rmvnorm(1, MCMCBetasI, V)
+MCMCBetasC <- as.vector(MCMCBetasC)
+# Metropolis ratio
+ratio <- ((-k * sum(log(1 + exp(X%*%MCMCBetasC))) + sum(y * X%*%MCMCBetasC) - (1/2) *
+t(MCMCBetasC - mu)%*%Sigma_inv%*%(MCMCBetasC - mu)) - ((-k * sum(log(1 + exp(X%*%MCMCBetasI)))) +
+sum(y * X%*%MCMCBetasI) - (1/2) * t(MCMCBetasI - mu)%*%Sigma_inv%*%(MCMCBetasI - mu)))
+# Accept/reject step
+if(runif(1) < min(1, exp(ratio)))
+{
+MCMCBetasI <- MCMCBetasC
+j <- j+1
+}
+# Saving results
+SaveResults[i,] <- MCMCBetasI
+}
+
+# Acceptance rate:
+acs<- j/TotIter
+acs

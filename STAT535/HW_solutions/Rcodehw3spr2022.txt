@@ -1,0 +1,378 @@
+# Problem 1:
+
+tot.draws <- 40000 # number of sampled values from each full conditional
+
+# Initial values for quantities of interest:
+delta.init <- 2
+theta.init <- 0
+
+mu.delta <- c(-3,0,3)
+
+# Dummy Vectors that will hold values for samples of interest:
+delta.vec <- c(delta.init, rep(NULL, times = tot.draws) )
+theta.vec <- c(theta.init, rep(NULL, times = tot.draws) )
+
+for (j in 2:(tot.draws+1) ) {
+ theta.vec[j] <- rnorm(n=1, mu.delta[delta.vec[j-1]], sd=sqrt(1/3))
+ my.prob.vec.numerators <- c(.45*dnorm(theta.vec[j], -3, sd=sqrt(1/3)), 
+                             .10*dnorm(theta.vec[j], 0, sd=sqrt(1/3)),
+                             .45*dnorm(theta.vec[j], 3, sd=sqrt(1/3)) )
+ my.prob.vec <- my.prob.vec.numerators / sum(my.prob.vec.numerators)
+ delta.vec[j] <- sample(1:3, size=1, prob=my.prob.vec)
+}
+
+theta.post <- theta.vec[-1]
+
+## Posterior summary for theta:
+
+hist(theta.post,freq=F)  
+
+my.seq <- seq(-6,6,length=1000)
+
+lines(my.seq, 0.45*dnorm(my.seq,-3, 1/3) + 0.10*dnorm(my.seq,0, 1/3) + 0.45*dnorm(my.seq,3, 1/3))
+
+# Redo with num.draws = 40000
+
+Part(e):
+
+#trace plot:
+plot(theta.post,type='l')
+
+# ACF plot:
+acf(theta.post)
+
+#########################################################################
+
+# Problem 2:
+
+x<-c(0.92,0.42,3.62,0.89,-0.69,0.45,-0.11,-0.14,-0.47,1.09,-0.34,0.62,0.27)
+y<-c(0.26,1.65,2.10,0.62,-1.16,1.29,-0.82,-0.36,-0.29,0.86,0.19,1.25,0.33)
+
+sum.xsq <- sum(x^2)
+sum.xy <- sum(x*y)
+sum.ysq <- sum(y^2)
+n <- length(x)
+
+S <- 30000
+rho.current <- 0.5 # initial value for M-H algorithm
+acs <- 0 # will be to track "acceptance rate"
+
+rho.values <- rep(0,times=S)  # will store sampled values of rho
+
+for (s in 1:S) {
+ rho.proposed <- runif(1,min=rho.current-0.2, max=rho.current+0.2)
+ if (rho.proposed < 0) rho.proposed <- abs(rho.proposed)
+ if (rho.proposed > 1) rho.proposed <- (2 - rho.proposed)
+
+log.accept.ratio <-  (-0.5*n*log(1-rho.proposed^2) - (1/(2*(1-rho.proposed^2))*(sum.xsq - 2*rho.proposed*sum.xy + sum.ysq))) - (-0.5*n*log(1-rho.current^2) - (1/(2*(1-rho.current^2))*(sum.xsq - 2*rho.current*sum.xy + sum.ysq)))
+
+  if (log.accept.ratio > log(runif(1)) ) {
+    rho.current <- rho.proposed
+    acs <- acs + 1
+  }
+
+rho.values[s] <- rho.current
+}
+
+acs/S  # gives the acceptance rate
+
+acf(rho.values)
+
+plot(rho.values,type='l')
+
+
+# Thinning out the sampled values by taking every 10th rho:
+
+rho.values.thin <- rho.values[10*(1:(S/10) )]
+
+acf(rho.values.thin)
+
+plot(rho.values.thin,type='l')
+
+### Posterior summary:
+
+plot(density(rho.values.thin))
+
+quantile(rho.values.thin, probs=c(0.025,0.5,0.975))
+
+library(TeachingDemos)
+emp.hpd(rho.values.thin)
+
+#########################################################################
+
+# Problem 3:
+
+x <- c(rep(0,times=109), rep(1,times=65), rep(2, times=22), rep(3, times=3), rep(4, times=1) )
+
+sum.x <- sum(x); n <- length(x)
+
+lambda.draws <- rgamma(n=5000,shape = sum.x + 2, rate = n + 4)
+
+samp.post.pred <- rpois(n=5000, lambda=lambda.draws)
+
+plot(table(x)/n, type='h', lwd=4, ylab='probability')
+windows()
+plot(table(samp.post.pred)/5000, type='h', lwd=4, ylab='probability', col='red')
+
+################################################################################
+
+
+# Problem 4:
+
+
+# problem 4(a)
+
+space<-c(8.59,8.64,7.43,7.21,6.87,7.89,9.79,6.85,7.00,8.80,9.30,8.03,6.39,7.24)
+earth<-c(8.65,6.99,8.40,9.66,7.62,7.44,8.55,8.70,7.33,8.58,9.88,9.94,7.14,9.04)
+
+
+x1 <- space
+x2 <- earth
+
+xbar.1 <- mean(x1); xbar.2 <- mean(x2);
+s2.1 <- var(x1); s2.2 <- var(x2);
+n1 <- length(x1);  n2 <- length(x2);
+
+
+s2.p <- ((n1-1)*s2.1 + (n2-1)*s2.2)/(n1+n2-2)
+
+n.alt <-   1 / (1/n1 + 1/n2)
+
+# Usual two-sample t-statistic:
+t.star <- (xbar.1 - xbar.2) / sqrt(s2.p/n.alt)
+
+# prior mean and variance for Delta = (mu1 - mu2)/sigma:
+
+mean.Delta <- 0  
+var.Delta <- 1/5 ## "objective" prior information
+
+
+my.pv <- sqrt(1 + n.alt * var.Delta) # scale parameter for noncentral-t
+my.ncp <- mean.Delta * sqrt(n.alt) / my.pv # noncentrality parameter for noncentral-t
+
+# Calculating Bayes Factor:
+
+B <- dt(t.star, df = n1+n2-2, ncp = 0) / ( dt(t.star/my.pv, df = n1+n2-2, ncp = my.ncp)/my.pv )
+
+print(B)
+
+# Probability that H_0 is true, given equal prior probabilities for H_0 and H_a:
+
+1 / (1 + (1/B))
+
+
+# problem 4(b)
+
+S <- 20000 # number of Gibbs iterations
+
+# Prior parameters for mu: 
+
+mean.mu <- 7  # expect overall mean around seven
+var.mu <- 50  # chosen quite wide
+
+# Prior parameters for tau: 
+
+mean.tau <- 0  # not favoring either group a priori
+var.tau <- 50  # chosen quite wide again
+
+# Prior parameters for sigma^2: 
+
+nu1 <- 1  
+nu2 <- 20
+
+## Vectors to hold values of mu, tau, and sigma^2:
+mu.vec <- rep(0, times=S)
+tau.vec <- rep(0, times=S)
+sigma.sq.vec <- rep(0, times=S)
+
+## Starting values for mu and tau:
+
+mu.vec[1] <- 2
+tau.vec[1] <- 0
+
+## Starting Gibbs algorithm:
+
+for (s in 2:S){
+
+# update sigma.sq:
+
+sigma.sq.vec[s] <- 1/rgamma(1,(nu1+n1+n2)/2,(nu1*nu2+sum((x1-mu.vec[s-1]-tau.vec[s-1])^2)+
+                   sum((x2-mu.vec[s-1]+tau.vec[s-1])^2))/2)
+
+
+# update mu:
+
+var.mu.cond <- 1/(1/var.mu+(n1+n2)/sigma.sq.vec[s])
+mean.mu.cond <- var.mu.cond*(mean.mu/var.mu+sum(x1-tau.vec[s-1])/sigma.sq.vec[s]+
+                sum(x2+tau.vec[s-1])/sigma.sq.vec[s])
+mu.vec[s] <- rnorm(1,mean.mu.cond,sqrt(var.mu.cond))
+
+# update tau:
+
+var.tau.cond <- 1/(1/var.tau+(n1+n2)/sigma.sq.vec[s])
+mean.tau.cond <- var.tau.cond*(mean.tau/var.tau+sum(x1-mu.vec[s])/sigma.sq.vec[s] - 
+                 sum(x2-mu.vec[s])/sigma.sq.vec[s])
+tau.vec[s] <- rnorm(1,mean.tau.cond,sqrt(var.tau.cond))
+
+}
+## End Gibbs algorithm.
+
+# MCMC diagnostics for mu, tau, sigma^2
+
+par(mfrow=c(3,1))  # set up 3-by-1 array of plots
+plot(sigma.sq.vec, type='l')
+plot(mu.vec, type='l')
+plot(tau.vec, type='l')
+
+#windows()  # open new plotting window
+par(mfrow=c(3,1))
+acf(sigma.sq.vec)
+acf(mu.vec)
+acf(tau.vec)
+
+par(mfrow=c(1,1))  # reset window
+
+# Plotting estimated posterior density for mu (after deleting first 100 values as burn-in):
+
+plot(density(mu.vec[-(1:100)]))
+
+windows()  # open new plotting window
+
+# Plotting estimated posterior density for tau (after deleting first 100 values as burn-in):
+
+plot(density(tau.vec[-(1:100)]))
+
+# Posterior probability that mean for space group is greater than or equal to mean for earth group:
+# This is the probability that H0 is TRUE here.
+
+mean( tau.vec[-(1:100)] >= 0)
+
+
+### Problem 5:
+
+
+### Problem 5(a)
+
+y<-c(118,140,90,150,128,112,134,140,112,126,112,148,124,130,142,105,125)
+n <- length(y); ybar <- mean(y)
+print(n);print(ybar)
+
+library(bayesrules)
+summarize_normal_normal(mean = 130, sd = 5, sigma = 15,
+                        y_bar = 125.6471, n = 17)
+
+# posterior P[mu >= 130] == P[H0 is true]:
+
+pnorm(130, mean=127.1539 , sd=2.941742, lower = F)
+
+# problem 5(b)
+
+t.test(x,mu=130,alternative="less")
+
+
+## Problem 7.6 from book:
+
+#(a)
+set.seed(84735)
+rnorm(n=1,mean=4.6,sd=2)
+
+#(b)
+set.seed(84735)
+rnorm(n=1,mean=2.1,sd=7)
+
+#(c)
+set.seed(84735)
+runif(n=1,min=8.9-2,max=8.9+2)
+
+#(d)
+set.seed(84735)
+runif(n=1,min=1.2-0.5,max=1.2+0.5)
+
+#(e)
+set.seed(84735)
+runif(n=1,min=7.7-3,max=7.7+3)
+
+
+## Problem 7.7 from book:
+
+proposed<-2.1
+current<-2
+
+#(a)
+
+top<-((proposed)^(-2))*dnorm(current,mean=proposed, sd=1)
+bottom<-((current)^(-2))*dnorm(proposed,mean=current, sd=1)
+accept.ratio <- top/bottom
+print(accept.ratio)
+
+#(b)
+
+top<-(exp(proposed))*dnorm(current,mean=proposed, sd=0.2)
+bottom<-(exp(current))*dnorm(proposed,mean=current, sd=0.2)
+accept.ratio <- top/bottom
+print(accept.ratio)
+
+#(c)
+
+top<-(exp(-10*proposed))*dunif(current,min=proposed-0.5, max=proposed+0.5)
+bottom<-(exp(-10*current))*dunif(proposed,min=current-0.5, max=current+0.5)
+accept.ratio <- top/bottom
+print(accept.ratio)
+
+#(d)
+
+top<-(exp(-(proposed^4)))*dexp(current,rate=proposed)
+bottom<-(exp(-(current^4)))*dexp(proposed,rate=current)
+accept.ratio <- top/bottom
+print(accept.ratio)
+
+
+## Problem 8.8 in book:
+
+# HPD:
+
+library(TeachingDemos)
+
+hpd(qgamma,shape=1,rate=5,conf=0.95)
+
+# middle 95%:
+
+c(qgamma(0.025,shape=1,rate=5), qgamma(0.975,shape=1,rate=5) )
+
+# HPD:
+
+library(TeachingDemos)
+
+hpd(qnorm,mean=-13,sd=2,conf=0.95)
+
+# middle 95%:
+
+c(qnorm(0.025,mean=-13,sd=2), qnorm(0.975,mean=-13,sd=2) )
+
+## Problem 8.9 in book:
+
+# posterior probability for Ha:
+
+post.prob.Ha <- 1-pbeta(0.4,4,3)
+print(post.prob.Ha)
+
+# posterior odds for Ha:
+
+post.odds.Ha <- (post.prob.Ha)/(1-post.prob.Ha)
+print(post.odds.Ha)
+
+# prior odds for Ha:
+
+prior.prob.Ha <- 1-pbeta(0.4,1,0.8)
+prior.odds.Ha <- (prior.prob.Ha)/(1-prior.prob.Ha)
+print(prior.odds.Ha)
+
+# Bayes factor for Ha:
+
+(post.odds.Ha)/(prior.odds.Ha)
+
+# Note the Bayes Factor for H0 would be the reciprocal of this.
+
+
+
+
