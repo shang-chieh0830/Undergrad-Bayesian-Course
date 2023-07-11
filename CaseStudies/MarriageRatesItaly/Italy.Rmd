@@ -1,0 +1,30 @@
+---
+output:
+  pdf_document: default
+classoption: dvipsnames
+header-includes:
+  - \usepackage{color}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(devtools)
+devtools::install_github("bayesball/ProbBayes")
+
+require(ggplot2)
+require(gridExtra)
+require(ProbBayes)
+require(tidyverse)
+require(runjags)
+require(coda)
+crcblue <- "#2905a1"
+
+```
+
+```{r}
+rates <- read.csv("ItalyMarriageRates.csv")
+plot(rates$Rates..per.1000. ~ rates$Year, xlab="Year", ylab = "Marriage Rate", main= "Italy Marriage")
+abline(v=1939.5, col="red")
+abline(v=1945.4, col="red")
+```
+

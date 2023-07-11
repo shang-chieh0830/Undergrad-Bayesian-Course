@@ -31,7 +31,7 @@ knitr::knit_hooks$set(chunk = function(x, options) {
 # Installing the necessary packages
 
 ```{r, eval = FALSE}
-install.packages("devtools")
+#install.packages("devtools")
 require(devtools)
 devtools::install_github("bayesball/ProbBayes")
 
@@ -172,6 +172,9 @@ tau <- sqrt(pow(invtau2, -1))
 "
 ```
 
+Note that `mu_j[schedule[i]]`, we need to determine which j this observation i belongs to. By passing the schedule of each observation as a vector, we can extract which $\mu_j$ that we should be working on.
+
+
 - Notes about the \texttt{modelString}
     1. Need a vector of \texttt{mu\_j}, of length \texttt{J}.
     2. Need a vector of \texttt{schedule}, of length \texttt{N}.
@@ -201,6 +204,9 @@ the_data <- list("y" = y, "schedule" = schedule, "N" = N, "J" = J,
                  "a_g" = 1, "b_g" = 1)
 ```
 
+The `initsfunction` shows the way to set seed with JAGS. `set.seed()` won't work in JAGS.
+
+
 - Run the JAGS code for this model:
 
 ```{r message = FALSE, warning = FALSE}
@@ -215,6 +221,16 @@ posterior <- run.jags(modelString,
                       inits = initsfunction)
 ```
 
+`moniter` is the list of the parameters you want to track.
+
+`adapt` has default 1000, you can think in a way that it's similar to `burnin`.
+
+`burnin` is the number of draws that you want to toss out.
+
+`sample` is the final number of iterations that you want to have.
+
+`inits` is for reproducible setup.
+
 ## JAGS Output of the Hierarchical Model
 
 - Obtain posterior summaries of all parameters:
@@ -224,6 +240,12 @@ posterior <- run.jags(modelString,
 ```{r message = FALSE, warning = FALSE}
 summary(posterior) 
 ```
+
+Do you think the $\mu_j$'s (average ratings) do differ a lot across different groups? Look at the mean, they are different.
+
+All credible intervals for $\mu_j$ contain 0, which means that they are not statistically significant from 0. 
+
+Yet, the lower bounds of credible intervals for $mu_j$ and $\mu$ are negative. This doesn't make sense as the rating can not be negative. Using normal may not be suitable for this particular data type. Consider truncated normal.
 
 ```{r message = FALSE}
 plot(posterior, vars = "mu_j[1]")
@@ -265,6 +287,9 @@ ggplot(rbind(Means1, Means2), aes(Type, Mean, group=Title)) +
            size = 3, label = Means1$Title) + increasefont(Size = 10)
 ```
 
+The right-hand side is the sample mean of the 4 different schedules.
+On the left-hand side, we have the posterior mean after fitting the hierarchical model.
+
 
 ## Sources of Variability
 
@@ -288,7 +313,7 @@ from the posterior draws of $\tau$ and $\sigma$.
 - We need the \texttt{coda} R package
 
 ```{r eval = FALSE}
-install.packages("coda")
+#install.packages("coda")
 ```
 
 ```{r message = FALSE, warning = FALSE}
@@ -313,7 +338,51 @@ ggplot(df, aes(x=R)) + geom_density() +
 
 # Exercise: Hierarchical model with schedule-specific $\mu_j$ and $\sigma_j$
 
+## P.37/42
+
+- Specify a shared Normal prior distribution for $\mu_j$
+
+\begin{align}
+\mu_j\sim Normal(\mu, \tau)
+\end{align}
+
+We think the $\mu_j$'s are related to each other, but they are not the same. We think all of them come from normal distribution with mean $\mu$ (they should be somewhere around $\mu$ basically). $\tau$ controls how $\mu_j$ are going to be different from $\mu$ or different from each other.
+
+- In addition, specify a shared Gamma prior distribution for $\sigma_j$
+
+\begin{align}
+\frac{1}{\sigma_j^2}\sim Gamma(s_a, s_b)
+\end{align}
+
+where the mean is $s_a/s_b$ and the variance is $s_a/s_b^2$
+
+All of the $\sigma_j$'s are related somehow. The mean controls on average how they should be. The variance controls the similarity between the $\sigma_j$'s.
 
 
+```{r message = FALSE}
+modelString <-"
+model {
+## likelihood
+for (i in 1:N){
+y[i] ~ dnorm(mu_j[schedule[i]], invsigma2_j[schedule[i]])
+}
+
+## priors
+for (j in 1:J){
+mu_j[j] ~ dnorm(mu, invtau2)
+invsigma2_j[j] ~ dgamma(s_a, s_b)
+}
+
+## sigma <- sqrt(pow(invsigma2, -1))
+
+## hyperpriors need to add s_a and s_b as well
+mu ~ dnorm(mu0, 1/g0^2)
+invtau2 ~ dgamma(a_t, b_t)
+tau <- sqrt(pow(invtau2, -1))
+## s_a
+## s_b
+}
+"
+```
 
 # Recap

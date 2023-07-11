@@ -1,16 +1,26 @@
 ---
 output:
   pdf_document: default
+classoption: dvipsnames
 header-includes:
   - \usepackage{color}
-  - \usepackage[dvipsnames]{xcolor}
 ---
 ----
  Fall 2019: MATH 347 Bayesian Statistics
 ---
 
 ```{r}
+require(devtools)
+devtools::install_github("bayesball/ProbBayes")
 
+require(ggplot2)
+require(gridExtra)
+require(ProbBayes)
+require(tidyverse)
+require(runjags)
+require(coda)
+crcblue <- "#2905a1"
+CEData <- read.csv("CEsample.csv", header = T, sep = ",")
 ```
 ## \textcolor{RoyalBlue}{{Lab 5: Conditional means priors in Bayesian linear regression}}
 #### Author:_____(Insert your name here) _____
@@ -83,7 +93,7 @@ This lab explores the conditional means priors for the regression coefficients i
 ## \textcolor{RoyalBlue}{Specifying a conditional means prior in JAGS}
 The \texttt{modelString} sample script for specifying a conditional means prior is given below.
 
-```{r,eval=FALSE}
+```{r}
 ## write the model
 modelString <-"
 model {
@@ -104,20 +114,108 @@ sigma <- sqrt(pow(invsigma2, -1))
 
 #### \textcolor{RoyalBlue}{Exercise 1:} Provide the hyperparameter values in Equation $(7)$ and Equation $(8)$ in terms of \texttt{the\_data} for the conditional means prior. You can simply write down R script when specifying the list of \texttt{the\_data} as your answer.
 
+```{r}
+y <- as.vector(CEData$log_TotalExp)
+x <- as.vector(CEData$log_TotalIncome)
+N <- length(y)
+the_data <- list("y"=y, "x"=x, "N"=N,
+                 "m1"=8, "g1"=2, "x1"=10,
+                 "m2"=11, "g2"=2, "x2"=12,
+                 "a"=1, "b"=1)
+
+initsfunction <- function(chain){
+  .RNG.seed <- c(1,2)[chain]
+  .RNG.name <- c("base::Super-Duper",
+                 "base::Wichmann-Hill")[chain]
+  return(list(.RNG.seed=.RNG.seed,
+              .RNG.name=.RNG.name))
+}
+```
+
+
 #### \textcolor{Bittersweet}{Grade for Exercise 1: /3} 
 #### \textcolor{Bittersweet}{Comments: }
 
 #### \textcolor{RoyalBlue}{Exercise 2:} Run the complete JAGS script and perform MCMC diagnostics.
+
+```{r}
+posterior <- run.jags(modelString,
+                      n.chains = 1,
+                      data = the_data,
+                      monitor = c("beta0", "beta1", "sigma"),
+                      adapt = 1000,
+                      burnin = 5000,
+                      sample = 5000,
+                      thin = 1,
+                      inits = initsfunction)
+```
+```{r}
+summary(posterior) 
+```
+```{r}
+plot(posterior, vars = "beta0")
+```
+
+```{r}
+plot(posterior, vars = "beta1")
+```
+
+```{r}
+plot(posterior, vars = "sigma")
+```
+
 
 #### \textcolor{Bittersweet}{Grade for Exercise 2: /4} 
 #### \textcolor{Bittersweet}{Comments: }
 
 #### \textcolor{RoyalBlue}{Exercise 3:} Interpret $\beta_0$ and $\beta_1$ in the context of the CE example.
 
+```{r}
+post <- as.mcmc(posterior)
+post_means <- apply(post, 2, mean)
+post <- as.data.frame(post)
+
+ggplot(CEData, aes(log_TotalIncome, log_TotalExp)) +
+  geom_point(size=1) +
+  geom_abline(data=post[1:10, ],
+              aes(intercept=beta0, slope=beta1), alpha = 0.5) +
+  geom_abline(intercept = post_means[1],
+              slope = post_means[2], size = 1) +
+  ylab("log(Expenditure)") + xlab("log(Income)") +
+  theme_grey(base_size = 10, base_family = "")
+```
+
+
 #### \textcolor{Bittersweet}{Grade for Exercise 3: /4} 
 #### \textcolor{Bittersweet}{Comments: }
 
 #### \textcolor{RoyalBlue}{Exercise 4:} Use the posterior samples of $(\beta_0,\beta_1,\sigma)$ and produce predicted values of future responses at $x=1,5,7,9$ and make a plot. What can you say about predicted log(Expenditure) for a CU of $\$5$ log(Income)? (Hint: check out lecture slides page $39-41$.)
+
+```{r}
+
+one_predicted <- function(x){
+  lp <- post[ , "beta0"] +  x * post[ , "beta1"]
+  y <- rnorm(5000, lp, post[, "sigma"])
+  data.frame(Value = paste("log(Income) =", x),
+             Predicted_logExp = y)
+}
+df <- map_df(c(1, 5, 7, 9), one_predicted)
+```
+
+```{r}
+require(ggridges)
+ggplot(df, aes(x = Predicted_logExp, y = Value)) +
+  geom_density_ridges() +
+  theme_grey(base_size = 9, base_family = "")
+```
+
+```{r}
+df %>% group_by(Value) %>%
+  summarize(P05 = quantile(Predicted_logExp, 0.05),
+            P50 = median(Predicted_logExp),
+            P95 = quantile(Predicted_logExp, 0.95))
+```
+
 
 #### \textcolor{Bittersweet}{Grade for Exercise 4: /4} 
 #### \textcolor{Bittersweet}{Comments: }

@@ -1,0 +1,123 @@
+---
+title: "Bayesian Statistics- HW4"
+author: "魏上傑"
+date: "2023-06-17"
+output:
+  pdf_document:
+    latex_engine: xelatex
+  html_document:
+    df_print: paged
+mainfont: Times New Roman
+fontsize: 12pt
+papersize: a4
+geometry: margin=1.5cm
+lang: "zh-tw"
+documentclass: ctexart
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(ggplot2)
+require(gridExtra)
+require(ProbBayes)
+require(tidyverse)
+crcblue <- "#2905a1"
+```
+
+1. 
+
+(a).
+
+```{r}
+par(mfrow=c(1, 2))
+par(mai=c(0.9,0.9,0.1,0.1))
+
+# Chrystal's prior
+X <- rgamma(n = 100, shape = 70, scale = 1/10)
+hist(X, prob=TRUE, breaks=10, main=NULL)
+x <- seq(min(X), max(X), length.out=100)
+lines(x, dgamma(x, shape=70, scale=1/10), col="red")
+
+# Danny's prior
+Y <- rgamma(n=100, shape= 33.3, scale = 1/3.3)
+hist(Y, prob=TRUE, breaks=10, main=NULL)
+y <- seq(min(Y), max(Y), length.out=100)
+lines(y, dgamma(y, shape=33.3, scale=1/3.3), col="red")
+```
+
+(b).
+
+```{r}
+cat("Chrystal's belief on the average ER visits is",mean(X),"\n")
+cat("Danny's belief on the average ER visits is", mean(Y),"\n")
+var(X)
+var(Y)
+cat("Chrystal is more confident of her best guess at the average number of ER visits")
+```
+(c).
+
+```{r}
+# Chrystal's 90% credible interval
+qgamma(c(0.05, 0.95), shape = 70, scale = 1/10)
+# Danny's 90% credible interval
+qgamma(c(0.05, 0.95), shape= 33.3, scale=1/3.3)
+```
+
+(d).
+
+Need to increase the variance.
+
+2. 
+
+(a). 
+
+```{r}
+n <- 7
+y.sum <- 8+6+6+9+8+9+7
+
+#Chrystal's 95% posterior credible interval
+qgamma(c(0.025, 0.975), shape = 70+y.sum, scale = 1/(10+n))
+
+#Danny's 95% posterior credible interval
+qgamma(c(0.025, 0.975), shape = 33.3+y.sum, scale = 1/(3.3+n))
+
+
+```
+
+(b).
+
+To assess if the statement "the average number of ER visits during any evening hour does not exceed 6" is reasonable, one simply computes its posterior probability, $\Pr (\lambda\ge 6|\alpha_n, \beta_n)$
+
+```{r}
+1-pgamma(6, shape = 70+y.sum, scale = 1/(10+n))
+1-pgamma(6, shape = 33.3+y.sum, scale = 1/(3.3+n))
+```
+
+The probability is very high, so one would conclude that this statement is unlikely to be true.
+
+(c).
+
+```{r}
+# use Chrystal's posterior to predict
+S <- 7
+pred_mu_sim <- rgamma(S, shape = 70+y.sum, rate = 10+n) # sample mu from posterior
+pred_y_sim <- rpois(S, lambda = pred_mu_sim)
+pred_y_sim
+```
+
+```{r}
+# use Danny's posterior to predict
+pred_mu_sim <- rgamma(S, shape = 33.3+y.sum, rate = 3.3+n)
+pred_y_sim <- rpois(S, lambda = pred_mu_sim)
+pred_y_sim
+```
+
+3. 
+
+Theoretical exercises. Do on your own.
+
+
+4.
+
+Interpret on your own.

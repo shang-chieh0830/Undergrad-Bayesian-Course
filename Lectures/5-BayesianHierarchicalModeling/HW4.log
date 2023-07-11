@@ -1,9 +1,9 @@
-This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.5.28)  14 JUN 2023 13:45
+This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.5.28)  17 JUN 2023 15:12
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**HW3.tex
-(./HW3.tex
+**HW4.tex
+(./HW4.tex
 LaTeX2e <2022-11-01> patch level 1
 L3 programming layer <2023-05-22> (/Users/weishangjie/Library/TinyTeX/texmf-dist/tex/latex/ctex/ctexart.cls (/Users/weishangjie/Library/TinyTeX/texmf-dist/tex/latex/ctex/config/ctexbackend.cfg
 File: ctexbackend.cfg 2022/07/14 v2.5.10 Backend configuration file (CTEX)
@@ -620,8 +620,8 @@ Package: uniquecounter 2019/12/15 v1.4 Provide unlimited unique counter (HO)
 Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 285.
 )
 \Hy@SectionHShift=\skip64
-) (./HW3.aux)
-\openout1 = `HW3.aux'.
+) (./HW4.aux)
+\openout1 = `HW4.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 122.
 LaTeX Font Info:    ... okay on input line 122.
@@ -937,9 +937,9 @@ Package microtype Info: Character `textquotedblright ' is missing
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
 Package hyperref Info: Link coloring OFF on input line 122.
-(./HW3.out) (./HW3.out)
+(./HW4.out) (./HW4.out)
 \@outlinefile=\write4
-\openout4 = `HW3.out'.
+\openout4 = `HW4.out'.
 
 LaTeX Font Info:    Font shape `TU/TimesNewRoman(0)/m/n' will be
 (Font)              scaled to size 20.74pt on input line 124.
@@ -1031,21 +1031,17 @@ Package fontspec Info: Font family 'STFangsong(0)' created for font
 (fontspec)             <->s*[1.0073515724117]"STFangsong/OT:language=dflt;"
 (fontspec)             - 'small caps'  (m/sc) with NFSS spec.: 
 
-LaTeX Font Info:    Font shape `TU/STFangsong(0)/m/n' will be
-(Font)              scaled to size 12.08826pt on input line 155.
+File: HW4_files/figure-latex/unnamed-chunk-1-1.pdf Graphic file (type pdf)
+<use HW4_files/figure-latex/unnamed-chunk-1-1.pdf>
 [1
 
 ]
-File: HW3_files/figure-latex/unnamed-chunk-2-1.pdf Graphic file (type pdf)
-<use HW3_files/figure-latex/unnamed-chunk-2-1.pdf>
-
-Underfull \vbox (badness 4647) detected at line 225
- []
-
+LaTeX Font Info:    Font shape `TU/STFangsong(0)/m/n' will be
+(Font)              scaled to size 12.08826pt on input line 162.
 LaTeX Font Info:    Font shape `TU/TimesNewRoman(0)/m/sl' in size <12> not available
-(Font)              Font shape `TU/TimesNewRoman(0)/m/it' tried instead on input line 225.
+(Font)              Font shape `TU/TimesNewRoman(0)/m/it' tried instead on input line 219.
 LaTeX Font Info:    Font shape `TU/TimesNewRoman(0)/m/it' will be
-(Font)              scaled to size 12.0pt on input line 225.
+(Font)              scaled to size 12.0pt on input line 219.
 Package microtype Info: Character `textendash ' is missing
 (microtype)             in font `TU/TimesNewRoman(0)/m/it/12'.
 (microtype)             Ignoring protrusion settings for this character.
@@ -1065,49 +1061,57 @@ Package microtype Info: Character `textquotedblright ' is missing
 (microtype)             in font `TU/TimesNewRoman(0)/m/it/12'.
 (microtype)             Ignoring protrusion settings for this character.
 [2]
-File: HW3_files/figure-latex/unnamed-chunk-4-1.pdf Graphic file (type pdf)
-<use HW3_files/figure-latex/unnamed-chunk-4-1.pdf>
-File: HW3_files/figure-latex/unnamed-chunk-5-1.pdf Graphic file (type pdf)
-<use HW3_files/figure-latex/unnamed-chunk-5-1.pdf>
-[3]
-File: HW3_files/figure-latex/unnamed-chunk-6-1.pdf Graphic file (type pdf)
-<use HW3_files/figure-latex/unnamed-chunk-6-1.pdf>
-[4]
-LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <12> not available
-(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 264.
-File: HW3_files/figure-latex/unnamed-chunk-7-1.pdf Graphic file (type pdf)
-<use HW3_files/figure-latex/unnamed-chunk-7-1.pdf>
-[5]
-File: HW3_files/figure-latex/unnamed-chunk-8-1.pdf Graphic file (type pdf)
-<use HW3_files/figure-latex/unnamed-chunk-8-1.pdf>
-[6] [7]
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 8.71696pt on input line 482.
+(Font)              scaled to size 8.71696pt on input line 272.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 6.22641pt on input line 482.
+(Font)              scaled to size 6.22641pt on input line 272.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 12.4541pt on input line 482.
+(Font)              scaled to size 12.4541pt on input line 272.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 8.71785pt on input line 482.
+(Font)              scaled to size 8.71785pt on input line 272.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 6.22705pt on input line 482.
+(Font)              scaled to size 6.22705pt on input line 272.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 12.45154pt on input line 482.
+(Font)              scaled to size 12.45154pt on input line 272.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 8.71606pt on input line 482.
+(Font)              scaled to size 8.71606pt on input line 272.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 6.22577pt on input line 482.
-[8] [9] [10] [11] (./HW3.aux)
-Package rerunfilecheck Info: File `HW3.out' has not changed.
+(Font)              scaled to size 6.22577pt on input line 272.
+LaTeX Font Info:    Font shape `TU/TimesNewRoman(1)/m/n' will be
+(Font)              scaled to size 12.0pt on input line 272.
+Package microtype Info: Character `textendash ' is missing
+(microtype)             in font `TU/TimesNewRoman(1)/m/n/12'.
+(microtype)             Ignoring protrusion settings for this character.
+Package microtype Info: Character `textemdash ' is missing
+(microtype)             in font `TU/TimesNewRoman(1)/m/n/12'.
+(microtype)             Ignoring protrusion settings for this character.
+Package microtype Info: Character `textquoteleft ' is missing
+(microtype)             in font `TU/TimesNewRoman(1)/m/n/12'.
+(microtype)             Ignoring protrusion settings for this character.
+Package microtype Info: Character `textquoteright ' is missing
+(microtype)             in font `TU/TimesNewRoman(1)/m/n/12'.
+(microtype)             Ignoring protrusion settings for this character.
+Package microtype Info: Character `textquotedblleft ' is missing
+(microtype)             in font `TU/TimesNewRoman(1)/m/n/12'.
+(microtype)             Ignoring protrusion settings for this character.
+Package microtype Info: Character `textquotedblright ' is missing
+(microtype)             in font `TU/TimesNewRoman(1)/m/n/12'.
+(microtype)             Ignoring protrusion settings for this character.
+LaTeX Font Info:    Font shape `TU/TimesNewRoman(1)/m/n' will be
+(Font)              scaled to size 8.4pt on input line 272.
+LaTeX Font Info:    Font shape `TU/TimesNewRoman(1)/m/n' will be
+(Font)              scaled to size 6.0pt on input line 272.
+[3] [4] (./HW4.aux)
+Package rerunfilecheck Info: File `HW4.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 23629 strings out of 478700
- 476977 string characters out of 5847960
- 1875416 words of memory out of 5000000
- 43383 multiletter control sequences out of 15000+600000
- 520534 words of font info for 107 fonts, out of 8000000 for 9000
+ 23588 strings out of 478700
+ 475021 string characters out of 5847960
+ 1860416 words of memory out of 5000000
+ 43346 multiletter control sequences out of 15000+600000
+ 520550 words of font info for 109 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 89i,9n,122p,1000b,505s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 89i,6n,122p,1000b,890s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on HW3.pdf (11 pages).
+Output written on HW4.pdf (4 pages).

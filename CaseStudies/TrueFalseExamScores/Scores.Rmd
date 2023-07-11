@@ -1,0 +1,29 @@
+---
+output:
+  pdf_document: default
+classoption: dvipsnames
+header-includes:
+  - \usepackage{color}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(devtools)
+devtools::install_github("bayesball/ProbBayes")
+
+require(ggplot2)
+require(gridExtra)
+require(ProbBayes)
+require(tidyverse)
+require(runjags)
+require(coda)
+crcblue <- "#2905a1"
+
+```
+
+
+```{r}
+ScoreData = read.csv("TrueFalseScores.csv")
+plot(ScoreData$Score)
+```
+

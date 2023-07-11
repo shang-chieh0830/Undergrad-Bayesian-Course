@@ -320,3 +320,5 @@ sum(d>0)/S
 
 ```
 
+
+Notice that since the priors and likelihoods are independent, so the posterior is independent. So similarly, since the posterior is independent and the data models are independent, so eventually the posterior predictive will be independent as well.

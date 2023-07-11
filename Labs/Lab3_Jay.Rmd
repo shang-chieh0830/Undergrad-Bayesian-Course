@@ -1,9 +1,9 @@
 ---
 output:
   pdf_document: default
+classoption: dvipsnames
 header-includes:
   - \usepackage{color}
-  - \usepackage[dvipsnames]{xcolor}
 ---
 ----
  Fall 2019: MATH 347 Bayesian Statistics
@@ -13,7 +13,7 @@ header-includes:
 
 ```
 ## \textcolor{RoyalBlue}{Lab 3: Gibbs sampler of a Beta-Binomial}
-#### Author:_____(Insert your name here) _____
+#### Author:_____Shang-Chieh Wei _____
 
 #### \textcolor{Bittersweet}{Total Grade for Lab 3: /10} 
 #### \textcolor{Bittersweet}{Comments (optional)} 
@@ -71,8 +71,8 @@ the Beta-Binomial distribution.
 
 The \texttt{VGAM R} package can simulate draws from the Beta-Binomial distribution. Install this package and load the library.
 
-```{r,eval=FALSE}
-install.packages("VGAM")
+```{r}
+#install.packages("VGAM")
 library(VGAM)
 ```
 To generate a random draw from $X \sim \textrm{Beta-Binomial}(n,a,b)$:
@@ -92,6 +92,15 @@ According to the paper, “Figure $1$ displays histograms of two samples, $x_1,\
 #### \textcolor{RoyalBlue}{Exercise 1:} Use the \texttt{rbetabinom.ab} command to directly generate $m$ draws of $x$, which follows a Beta-Binomial distribution as shown in Equation $(4)$. Note that $m=500, n=16, \alpha=2, \beta=4$. Make a histogram of the $m$ draws you have generated.
 
 
+```{r}
+set.seed(123)
+BetaBinomialDraws <- rbetabinom.ab(500, 16, 2, 4, .dontuse.prob = NULL)
+par(mai=c(0.9,0.9,0.1,0.1))
+hist(BetaBinomialDraws, main=NULL, breaks=50)
+```
+
+
+
 #### \textcolor{Bittersweet}{Grade for Exercise 1: /3} 
 #### \textcolor{Bittersweet}{Comments: }
 
@@ -105,17 +114,37 @@ According to the caption of Figure $1$, ``The black histogram sample was obtaine
 
 #### \textcolor{RoyalBlue}{Exercise 3:} Write a Gibbs sampling scheme to generate $m$ draws of $x$. Note that $m=500,n=16,\alpha=2,\beta=4$ and $k=10$. Make a histogram of the $m$ draws you have generated.
 
+
+```{r}
+set.seed(123)
+m <- 500; n <- 16
+alpha <- 2; beta <- 4
+y <- 0
+BetaBinomialDrawsGibbs <- numeric(m)
+for(s in 1:m){
+  x <- rbinom(1, size = n, prob = y)
+  y <- rbeta(1, shape1 = x+alpha, shape2 = n-x+beta) 
+  BetaBinomialDrawsGibbs[s] <- x
+}
+par(mai=c(0.9,0.9,0.1,0.1))
+hist(BetaBinomialDrawsGibbs, main=NULL, breaks = 50)
+```
+
+
+
 #### \textcolor{Bittersweet}{Grade for Exercise 3: /4} 
 #### \textcolor{Bittersweet}{Comments: }
 
 #### \textcolor{RoyalBlue}{Exercise 4:} Make a side-by-side histogram showing the two samples, one generated in Exercise $1$, and the other generated in Exercise $3$. (Hint: you can use the following R script to do a side-by-side histogram. The demo below assumes \texttt{BetaBinomialDraws} storing the draws from Exercise $1$ and \texttt{BetaBinomialDrawsGibbs} storing the draws from Exercise $3$.)
 
-```{r,eval=FALSE}
-install.packages("plotrix")
+```{r}
+#install.packages("plotrix")
 library(plotrix)
 
 l <- list(BetaBinomialDraws,BetaBinomialDrawsGibbs)
+par(mai=c(0.9,0.9,0.1,0.1))
 multhist(l, breaks = seq(-0.5,16.5, by=1))
+abline(h=0)
 ```
 
 
